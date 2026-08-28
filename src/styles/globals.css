@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode (default) ── */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --navbar-bg: rgba(255, 255, 255, 0.92);
+  --navbar-border: #e2e8f0;
+}
+
+/* ── Dark mode ── */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card-bg: #1e293b;
+  --border-color: #334155;
+  --accent-glow: rgba(16, 185, 129, 0.4);
+  --navbar-bg: rgba(15, 23, 42, 0.9);
+  --navbar-border: #1e293b;
+}
+
+.high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card-bg: #121212;
+  --border-color: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.8);
+}
+
+html {
+  font-size: 16px;
+  transition: font-size 0.2s ease-in-out;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+html[data-font-size="xlarge"] {
+  font-size: 20px;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #059669;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+/* Glassmorphism card utilities */
+.glass-card {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-hover:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px 0 rgba(16, 185, 129, 0.2);
+}
+
+/* Interactive Anatomical SVG hotspots */
+.hotspot-region {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.hotspot-region:hover {
+  filter: drop-shadow(0 0 12px #10b981);
+}
+.hotspot-region.selected {
+  filter: drop-shadow(0 0 18px #059669);
+}
+
+/* 80mm Thermal Receipt Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #thermal-receipt-print,
+  #thermal-receipt-print * {
+    visibility: visible;
+  }
+  #thermal-receipt-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 8mm;
+    background: white !important;
+    color: black !important;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11pt;
+    line-height: 1.3;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
