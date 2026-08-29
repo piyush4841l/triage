@@ -154,6 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isRegionalLang = lang !== "en" && lang !== "hi";
 
   return (
+    <>
     <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm transition-colors">
       <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between gap-2 sm:gap-4 h-18 sm:h-20 min-w-0">
@@ -182,52 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </Link>
           </div>
 
-          {/* 2. Center: Portal Navigation Switcher */}
-          <div className="flex-1 flex justify-center min-w-0 px-1 sm:px-2">
-            <nav
-              aria-label="Portal Navigation"
-              className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-inner flex-shrink min-w-0"
-            >
-              {/* Kiosk Home */}
-              <Link
-                href="/"
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-                  pathname === "/"
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-                <span>Kiosk<span className="hidden xl:inline"> Home</span></span>
-              </Link>
 
-              {/* Doctor / Staff Portal */}
-              <Link
-                href="/doctor"
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-                  pathname === "/doctor"
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
-                }`}
-              >
-                <Stethoscope className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-                <span>Doctor<span className="hidden xl:inline"> / Staff</span> Portal</span>
-              </Link>
-
-              {/* Live Waiting Display */}
-              <Link
-                href="/display"
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-                  pathname === "/display"
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
-                }`}
-              >
-                <Monitor className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-                <span>Live<span className="hidden xl:inline"> Waiting</span> Display</span>
-              </Link>
-            </nav>
-          </div>
 
           {/* 3. Right: Utility Controls */}
           <div className="flex items-center space-x-1 sm:space-x-1.5 flex-shrink-0">
@@ -537,5 +493,53 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
     </header>
+
+    {/* Portal Navigation Switcher (Moved to Bottom Right) */}
+    <div className="fixed bottom-6 right-6 z-50">
+      <nav
+        aria-label="Portal Navigation"
+        className="flex flex-row items-center gap-2 p-1.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-2xl"
+      >
+        {/* Kiosk Home */}
+        <Link
+          href="/"
+          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+            pathname === "/"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+          <span>Kiosk Home</span>
+        </Link>
+
+        {/* Doctor / Staff Portal */}
+        <Link
+          href="/doctor"
+          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+            pathname === "/doctor"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
+          }`}
+        >
+          <Stethoscope className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+          <span>Doctor / Staff Portal</span>
+        </Link>
+
+        {/* Live Waiting Display */}
+        <Link
+          href="/display"
+          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+            pathname === "/display"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-1 ring-emerald-400/40"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
+          }`}
+        >
+          <Monitor className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+          <span>Live Waiting Display</span>
+        </Link>
+      </nav>
+    </div>
+    </>
   );
 };

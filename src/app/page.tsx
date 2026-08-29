@@ -262,18 +262,24 @@ export default function KioskPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center">
         
-        {/* Step Indicator Wizard (Hidden on Step 0) */}
+        {/* Step Indicator Wizard (Hidden on Step 0, vertical on desktop) */}
         {currentStep > 0 && (
-          <StepIndicator
-            currentStep={currentStep}
-            lang={lang}
-            onStepClick={(step) => {
-              if (step < currentStep) setCurrentStep(step);
-            }}
-          />
+          <div className="w-full sm:w-64 flex-shrink-0">
+            <StepIndicator
+              currentStep={currentStep}
+              lang={lang}
+              onStepClick={(step) => {
+                if (step < currentStep) setCurrentStep(step);
+              }}
+            />
+          </div>
         )}
+
+        {/* Content Box */}
+        <div className="flex-1 w-full max-w-4xl flex justify-center">
+          <div className="w-full scale-100 sm:scale-105 origin-top transition-transform duration-300">
 
         {/* Step 0: Landing / Start Screen */}
         {currentStep === 0 && (
@@ -341,6 +347,13 @@ export default function KioskPage() {
             onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
             onReset={handleResetKiosk}
           />
+        )}
+          </div>
+        </div>
+
+        {/* Empty Spacer to balance the layout and keep the center box perfectly centered */}
+        {currentStep > 0 && (
+          <div className="hidden sm:block sm:w-64 flex-shrink-0"></div>
         )}
 
       </main>

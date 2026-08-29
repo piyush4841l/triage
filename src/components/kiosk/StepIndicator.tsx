@@ -108,14 +108,22 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
   }));
 
   return (
-    <div className="w-full max-w-4xl mx-auto mb-8 sm:mb-10 px-2">
-      <div className="relative flex items-center justify-between">
+    <div className="w-full sm:w-64 flex flex-col pt-2 sm:pt-8 pr-0 sm:pr-8 mb-6 sm:mb-0">
+      <div className="relative flex flex-row sm:flex-col justify-between h-auto sm:h-[450px] w-full">
         
-        {/* Connecting progress bar line */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-2 bg-slate-200 dark:bg-slate-800/90 rounded-full -z-0">
+        {/* Mobile Horizontal Connecting Line */}
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-1.5 bg-slate-200 dark:bg-slate-800/90 rounded-full -z-0 sm:hidden">
           <div
-            className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-sm shadow-emerald-500/20"
+            className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-sm shadow-emerald-500/20 h-full"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+          />
+        </div>
+
+        {/* Desktop Vertical Connecting Line */}
+        <div className="absolute top-0 left-6 -translate-x-1/2 w-1.5 h-full bg-slate-200 dark:bg-slate-800/90 rounded-full -z-0 hidden sm:block">
+          <div
+            className="bg-gradient-to-b from-emerald-600 via-teal-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-sm shadow-emerald-500/20 w-full"
+            style={{ height: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
           />
         </div>
 
@@ -129,12 +137,12 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               key={s.num}
               onClick={() => isCompleted && onStepClick && onStepClick(s.num)}
               disabled={!isCompleted}
-              className={`relative z-10 flex flex-col items-center group transition-transform ${
+              className={`relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 group transition-transform ${
                 isCompleted ? "cursor-pointer hover:scale-105" : "cursor-default"
               }`}
             >
               <div
-                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 shadow-md ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 shadow-md shrink-0 ${
                   isCurrent
                     ? "bg-gradient-to-br from-emerald-600 to-teal-500 border-emerald-300 text-white ring-4 ring-emerald-500/25 dark:ring-emerald-500/30 scale-110 shadow-lg shadow-emerald-600/30"
                     : isCompleted
@@ -142,12 +150,12 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                     : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500"
                 }`}
               >
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Icon className="w-5 h-5" />
               </div>
 
-              <div className="mt-2.5 text-center">
+              <div className="mt-1 sm:mt-0 text-center sm:text-left flex-1 hidden sm:block">
                 <span
-                  className={`text-xs sm:text-sm font-black block tracking-tight ${
+                  className={`text-sm font-black block tracking-tight ${
                     isCurrent
                       ? "text-emerald-700 dark:text-emerald-400"
                       : isCompleted
@@ -157,7 +165,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                 >
                   {s.title}
                 </span>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 block font-medium hidden sm:block">
+                <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">
                   {s.desc}
                 </span>
               </div>
