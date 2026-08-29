@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "high-contrast";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -22,17 +22,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Read from localStorage on mount
     const saved = localStorage.getItem("kiosk_theme") as Theme | null;
-    const initialTheme = saved === "dark" ? "dark" : "light";
+    const initialTheme = (saved === "dark" || saved === "high-contrast") ? saved : "light";
     setThemeState(initialTheme);
     applyTheme(initialTheme);
   }, []);
 
   const applyTheme = (t: Theme) => {
     const root = document.documentElement;
+    root.classList.remove("dark", "high-contrast");
     if (t === "dark") {
       root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
+    } else if (t === "high-contrast") {
+      root.classList.add("high-contrast");
     }
   };
 
@@ -43,7 +44,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
+    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "high-contrast" : "light";
     setTheme(nextTheme);
   };
 

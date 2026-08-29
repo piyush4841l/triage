@@ -43,11 +43,16 @@ const config: Config = {
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "radar-sweep": "radar 2s linear infinite",
         "glow-pulse": "glow 1.5s ease-in-out infinite alternate",
+        "slide-in-right": "slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards"
       },
       keyframes: {
         glow: {
           "0%": { filter: "drop-shadow(0 0 4px rgba(59, 130, 246, 0.6))" },
           "100%": { filter: "drop-shadow(0 0 16px rgba(59, 130, 246, 0.9))" },
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(60px)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" }
         }
       }
     },

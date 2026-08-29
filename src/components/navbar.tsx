@@ -17,7 +17,8 @@ import {
   LayoutDashboard,
   Stethoscope,
   Monitor,
-  ShieldCheck
+  ShieldCheck,
+  Contrast
 } from "lucide-react";
 import { Language, translations } from "@/lib/i18n";
 import { speakText, stopSpeaking } from "@/lib/speech";
@@ -455,14 +456,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Light / Dark Mode Toggle Button */}
+            {/* Theme Toggle Button (Light/Dark/High Contrast) */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all shadow-sm"
-              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+                theme === "high-contrast"
+                  ? "bg-black text-white border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+              }`}
+              title={`Switch Theme (Current: ${theme})`}
             >
-              {theme === "dark" ? (
+              {theme === "high-contrast" ? (
+                <>
+                  <Contrast className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden lg:inline">Contrast</span>
+                </>
+              ) : theme === "dark" ? (
                 <>
                   <Sun className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                   <span className="hidden lg:inline">Light</span>

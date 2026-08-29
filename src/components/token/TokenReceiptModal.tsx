@@ -276,7 +276,7 @@ export const TokenReceiptModal: React.FC<TokenReceiptModalProps> = ({
       </div>
 
       {/* 80mm Thermal Receipt Hidden Print DOM Element */}
-      <div id="thermal-receipt-print" className="hidden">
+      <div id="thermal-receipt-print" className="hidden print:block">
         <div style={{ textAlign: "center", borderBottom: "1px dashed #000", paddingBottom: "4mm", marginBottom: "4mm" }}>
           <h2 style={{ fontSize: "14pt", margin: 0, fontWeight: "bold" }}>AIIMS / GOVT HOSPITAL OPD</h2>
           <p style={{ fontSize: "9pt", margin: "1mm 0" }}>National Health Mission - ABDM Verified</p>

@@ -62,6 +62,35 @@ export default function KioskPage() {
     setSelectedState(stateId);
   };
 
+  // Hydrate state from sessionStorage (Auto-Save Recovery)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("kiosk_session_state");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentStep !== undefined && parsed.currentStep > 0 && parsed.currentStep < 4) {
+          setCurrentStep(parsed.currentStep);
+        }
+        if (parsed.registrationData) setRegistrationData(parsed.registrationData);
+        if (parsed.selectedRegions) setSelectedRegions(parsed.selectedRegions);
+        if (parsed.symptomData) setSymptomData(parsed.symptomData);
+      }
+    } catch (e) {
+      console.error("Failed to load session state");
+    }
+  }, []);
+
+  // Save state to sessionStorage
+  useEffect(() => {
+    const stateToSave = {
+      currentStep,
+      registrationData,
+      selectedRegions,
+      symptomData,
+    };
+    sessionStorage.setItem("kiosk_session_state", JSON.stringify(stateToSave));
+  }, [currentStep, registrationData, selectedRegions, symptomData]);
+
   // Speak step guide when step changes and voice guide is on
   useEffect(() => {
     if (!voiceGuide) return;
@@ -77,6 +106,62 @@ export default function KioskPage() {
       speakText(prompts.step4, activeVoice);
     }
   }, [currentStep, lang, voiceGuide, voiceLang]);
+
+  // Auto-Reset Inactivity Timer
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+
+  useEffect(() => {
+    if (currentStep === 0 || currentStep === 4) {
+      setShowIdleWarning(false);
+      return;
+    }
+
+    let warningTimer: NodeJS.Timeout;
+    let resetTimer: NodeJS.Timeout;
+
+    const handleResetKioskInternal = () => {
+      setCurrentStep(0);
+      setRegistrationData({ patientName: "", age: 0, gender: "Male", phone: "" });
+      setSelectedRegions([]);
+      setSymptomData({ selectedOrgans: [], selectedSymptoms: [], isDontKnow: false, painSeverity: 5, duration: "few_days" });
+      setOcrData(null);
+      setGeneratedToken(null);
+      setShowIdleWarning(false);
+      sessionStorage.removeItem("kiosk_session_state");
+    };
+
+    const resetTimers = () => {
+      setShowIdleWarning(false);
+      clearTimeout(warningTimer);
+      clearTimeout(resetTimer);
+
+      // 60 seconds of inactivity triggers the warning modal
+      warningTimer = setTimeout(() => {
+        setShowIdleWarning(true);
+        
+        // 15 seconds to reply, otherwise hard reset
+        resetTimer = setTimeout(() => {
+          handleResetKioskInternal();
+        }, 15000);
+      }, 60000);
+    };
+
+    const handleActivity = () => resetTimers();
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("touchstart", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+
+    resetTimers(); // Start initial timer
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("touchstart", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      clearTimeout(warningTimer);
+      clearTimeout(resetTimer);
+    };
+  }, [currentStep]);
 
   // Handlers
   const handleRegistrationProceed = (data: PatientRegistrationData) => {
@@ -239,6 +324,7 @@ export default function KioskPage() {
     setIsDrillDownOpen(false);
     setIsEmergencyOpen(false);
     setIsWhatsAppOpen(false);
+    sessionStorage.removeItem("kiosk_session_state");
   };
 
   const handleEmergencyTokenGenerated = (token: StoredToken) => {
@@ -277,11 +363,13 @@ export default function KioskPage() {
           </div>
         )}
 
-        {/* Content Box */}
-        <div className="flex-1 w-full max-w-4xl flex justify-center pb-8 sm:pb-16">
-          <div className="w-full scale-100 sm:scale-105 origin-top transition-transform duration-300">
-
-        {/* Step 0: Landing / Start Screen */}
+        <div className="flex-1 w-full max-w-4xl flex justify-center pb-8 sm:pb-16 overflow-hidden sm:overflow-visible">
+          <div className="w-full scale-100 sm:scale-105 origin-top">
+            <div 
+              key={currentStep}
+              className="w-full animate-custom-slide-in"
+            >
+              {/* Step 0: Landing / Start Screen */}
         {currentStep === 0 && (
           <LandingScreen 
             lang={lang}
@@ -348,6 +436,7 @@ export default function KioskPage() {
             onReset={handleResetKiosk}
           />
         )}
+            </div>
           </div>
         </div>
 
@@ -386,6 +475,27 @@ export default function KioskPage() {
           token={generatedToken}
           lang={lang}
         />
+      )}
+
+      {/* Idle Warning Modal */}
+      {showIdleWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center mx-auto mb-4 border border-amber-200 dark:border-amber-800 animate-pulse">
+              <span className="text-2xl">⏳</span>
+            </div>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Are you still there?</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              For your privacy, this session will automatically reset if left unattended.
+            </p>
+            <button
+              onClick={() => setShowIdleWarning(false)}
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md active:scale-95"
+            >
+              Yes, I'm still here
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Kiosk Footer with Government & ABDM Compliance */}
