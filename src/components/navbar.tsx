@@ -50,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onVoiceGuideToggle,
   voiceLang = "en",
   onVoiceLangChange,
+  onOpenEmergency,
 }) => {
   const pathname = usePathname();
   const t = translations[lang] || translations.en;
@@ -102,10 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     const nextVal = !voiceGuide;
     onVoiceGuideToggle(nextVal);
-    if (nextVal) {
-      const prompts = VOICE_PROMPTS[effectiveVoiceLang] || VOICE_PROMPTS.en;
-      speakText(prompts.voiceActive, effectiveVoiceLang);
-    } else {
+    if (!nextVal) {
       stopSpeaking();
     }
   };
@@ -116,14 +114,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
     onVoiceGuideToggle(true);
     setIsVoiceMenuOpen(false);
-
-    const msg =
-      vLang === "en"
-        ? "Voice assistant will now speak in English."
-        : vLang === "hi"
-        ? "आवाज सहायक अब हिंदी में बोलेगा।"
-        : VOICE_PROMPTS[vLang]?.voiceActive || "Voice assistant active.";
-    speakText(msg, vLang);
   };
 
   const handleSelectState = (st: StateInfo) => {
@@ -132,12 +122,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     
     const targetLang = (st.primaryLanguageCode as Language) || "en";
     onLanguageChange(targetLang);
-
-    if (voiceGuide) {
-      const vLang = (targetLang !== "en" && targetLang !== "hi") ? effectiveVoiceLang : targetLang;
-      const prompts = VOICE_PROMPTS[vLang] || VOICE_PROMPTS.en;
-      speakText(prompts.stateSelected(st.name), vLang);
-    }
   };
 
   const handleSelectLanguage = (l: Language) => {
@@ -146,12 +130,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     if (l !== "en" && l !== "hi" && onVoiceLangChange && voiceLang !== "en" && voiceLang !== "hi") {
       onVoiceLangChange("hi");
-    }
-
-    if (voiceGuide) {
-      const vLang = (l !== "en" && l !== "hi") ? effectiveVoiceLang : l;
-      const prompts = VOICE_PROMPTS[vLang] || VOICE_PROMPTS.en;
-      speakText(prompts.langChanged, vLang);
     }
   };
 
@@ -539,6 +517,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="hidden lg:inline">Dark</span>
                 </>
               )}
+            </button>
+
+            {/* SOS Emergency Button */}
+            <button
+              type="button"
+              onClick={onOpenEmergency}
+              className="flex items-center space-x-1.5 px-3 py-1.5 ml-1 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 transition-colors font-bold text-xs shadow-sm"
+              title="Emergency SOS"
+            >
+              <div className="w-4 h-4 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center">
+                <span className="text-[10px] font-black">!</span>
+              </div>
+              <span className="tracking-widest">SOS</span>
             </button>
 
           </div>

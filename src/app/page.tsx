@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { StepIndicator } from "@/components/kiosk/StepIndicator";
 import { PatientRegistration, PatientRegistrationData } from "@/components/registration/PatientRegistration";
+import { LandingScreen } from "@/components/kiosk/LandingScreen";
 import { AnatomicalSkeletonMap } from "@/components/anatomy/AnatomicalSkeletonMap";
 import { OrganDrillDownModal, SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
 import { DocumentUpload, OcrExtractedData } from "@/components/ocr/DocumentUpload";
@@ -24,8 +25,8 @@ export default function KioskPage() {
   const [voiceGuide, setVoiceGuide] = useState<boolean>(false);
   const [voiceLang, setVoiceLang] = useState<Language>("hi");
 
-  // Flow State: 1 = Registration, 2 = Anatomy Map, 3 = OCR Upload, 4 = Token Receipt
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  // Flow State: 0 = Landing, 1 = Registration, 2 = Anatomy Map, 3 = OCR Upload, 4 = Token Receipt
+  const [currentStep, setCurrentStep] = useState<number>(0);
 
   // Registration Data
   const [registrationData, setRegistrationData] = useState<PatientRegistrationData>({
@@ -218,7 +219,7 @@ export default function KioskPage() {
   };
 
   const handleResetKiosk = () => {
-    setCurrentStep(1);
+    setCurrentStep(0);
     setRegistrationData({
       patientName: "",
       age: 0,
@@ -263,14 +264,34 @@ export default function KioskPage() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Step Indicator Wizard */}
-        <StepIndicator
-          currentStep={currentStep}
-          lang={lang}
-          onStepClick={(step) => {
-            if (step < currentStep) setCurrentStep(step);
-          }}
-        />
+        {/* Step Indicator Wizard (Hidden on Step 0) */}
+        {currentStep > 0 && (
+          <StepIndicator
+            currentStep={currentStep}
+            lang={lang}
+            onStepClick={(step) => {
+              if (step < currentStep) setCurrentStep(step);
+            }}
+          />
+        )}
+
+        {/* Step 0: Landing / Start Screen */}
+        {currentStep === 0 && (
+          <LandingScreen 
+            lang={lang}
+            onStartReal={() => setCurrentStep(1)}
+            onStartDemo={() => {
+              setRegistrationData({
+                patientName: "Ramesh Kumar",
+                age: 48,
+                gender: "Male",
+                phone: "9876543210",
+                abhaId: "14-8890-4432-1102"
+              });
+              setCurrentStep(1);
+            }}
+          />
+        )}
 
         {/* Step 1: Patient Registration & Identification */}
         {currentStep === 1 && (

@@ -3,20 +3,14 @@
 import React, { useState } from "react";
 import { 
   AlertOctagon, 
-  HeartPulse, 
-  Wind, 
-  Flame, 
   Mic, 
   MicOff, 
-  CheckCircle2, 
   ArrowRight, 
   X,
   ShieldAlert,
   User,
   CreditCard,
-  Phone,
-  Lock,
-  Ambulance
+  Phone
 } from "lucide-react";
 import { Language, translations } from "@/lib/i18n";
 import { computeTriage } from "@/lib/triage";
@@ -40,11 +34,9 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   onTokenGenerated,
 }) => {
   const t = translations[lang] || translations.en;
-  const [selectedCondition, setSelectedCondition] = useState<"cardiac" | "breathing" | "accident" | "fever_trauma">("cardiac");
   const [patientName, setPatientName] = useState("");
   const [abhaId, setAbhaId] = useState("");
   const [phone, setPhone] = useState("");
-  const [abhaPassword, setAbhaPassword] = useState("");
   const [isListeningPhone, setIsListeningPhone] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -87,14 +79,14 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
       gender: "Male",
       phone: effectivePhone,
       abhaId: effectiveAbha,
-      selectedRegions: selectedCondition === "cardiac" || selectedCondition === "breathing" ? ["chest"] : selectedCondition === "accident" ? ["pelvis", "legs_joints"] : ["head_neck"],
-      selectedOrgans: selectedCondition === "cardiac" ? ["heart"] : selectedCondition === "breathing" ? ["lungs"] : selectedCondition === "accident" ? ["hip_joint", "knee_joint"] : ["forehead_brain"],
-      selectedSymptoms: selectedCondition === "cardiac" ? ["chest_pressure_severe"] : selectedCondition === "breathing" ? ["breathlessness"] : selectedCondition === "accident" ? ["joint_swelling"] : ["high_fever_chills"],
+      selectedRegions: ["chest"],
+      selectedOrgans: ["heart"],
+      selectedSymptoms: ["chest_pressure_severe"],
       isDontKnow: false,
       painSeverity: 10,
       duration: "today",
       isEmergencyOverride: true,
-      emergencyConditionType: selectedCondition,
+      emergencyConditionType: "cardiac",
     });
 
     const newStoredToken: StoredToken = {
@@ -113,7 +105,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
         painSeverity: 10,
         duration: "today",
         isEmergencyOverride: true,
-        emergencyConditionType: selectedCondition,
+        emergencyConditionType: "cardiac",
       },
       status: "WAITING",
       createdAt: new Date().toISOString(),
@@ -162,114 +154,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
           </div>
         </div>
 
-        {/* Critical Condition Selector (4 Conditions) */}
-        <div className="space-y-3">
-          <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-700 dark:text-red-300">
-            {t.criticalConditions}
-          </label>
-
-          <div className="grid grid-cols-1 gap-2.5">
-            
-            {/* Condition 1: Cardiac */}
-            <button
-              type="button"
-              onClick={() => setSelectedCondition("cardiac")}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-start space-x-3.5 ${
-                selectedCondition === "cardiac"
-                  ? "bg-red-50 dark:bg-red-950/80 border-red-500 ring-2 ring-red-500/30 shadow-md"
-                  : "bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-red-300"
-              }`}
-            >
-              <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-600/20 border border-red-300 dark:border-red-500/30 text-red-600 dark:text-red-400 mt-0.5">
-                <HeartPulse className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">{t.conditionCardiac}</h4>
-                  {selectedCondition === "cardiac" && (
-                    <CheckCircle2 className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{t.conditionCardiacDesc}</p>
-              </div>
-            </button>
-
-            {/* Condition 2: Breathing */}
-            <button
-              type="button"
-              onClick={() => setSelectedCondition("breathing")}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-start space-x-3.5 ${
-                selectedCondition === "breathing"
-                  ? "bg-red-50 dark:bg-red-950/80 border-red-500 ring-2 ring-red-500/30 shadow-md"
-                  : "bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-red-300"
-              }`}
-            >
-              <div className="p-2.5 rounded-xl bg-cyan-100 dark:bg-cyan-600/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400 mt-0.5">
-                <Wind className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">{t.conditionBreathing}</h4>
-                  {selectedCondition === "breathing" && (
-                    <CheckCircle2 className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{t.conditionBreathingDesc}</p>
-              </div>
-            </button>
-
-            {/* Condition 3: Accident / Road Collision */}
-            <button
-              type="button"
-              onClick={() => setSelectedCondition("accident")}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-start space-x-3.5 ${
-                selectedCondition === "accident"
-                  ? "bg-red-50 dark:bg-red-950/80 border-red-500 ring-2 ring-red-500/30 shadow-md"
-                  : "bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-red-300"
-              }`}
-            >
-              <div className="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-600/20 border border-rose-300 dark:border-rose-500/30 text-rose-700 dark:text-rose-400 mt-0.5">
-                <Ambulance className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">{t.conditionAccident}</h4>
-                  {selectedCondition === "accident" && (
-                    <CheckCircle2 className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{t.conditionAccidentDesc}</p>
-              </div>
-            </button>
-
-            {/* Condition 4: Fever / Trauma */}
-            <button
-              type="button"
-              onClick={() => setSelectedCondition("fever_trauma")}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-start space-x-3.5 ${
-                selectedCondition === "fever_trauma"
-                  ? "bg-red-50 dark:bg-red-950/80 border-red-500 ring-2 ring-red-500/30 shadow-md"
-                  : "bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-red-300"
-              }`}
-            >
-              <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-600/20 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 mt-0.5">
-                <Flame className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">{t.conditionFeverTrauma}</h4>
-                  {selectedCondition === "fever_trauma" && (
-                    <CheckCircle2 className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{t.conditionFeverTraumaDesc}</p>
-              </div>
-            </button>
-
-          </div>
-        </div>
-
-        {/* 4 Patient Details in Emergency Section */}
+        {/* Patient Details in Emergency Section */}
         <div className="space-y-3 pt-1">
           <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-700 dark:text-red-400 block">
             Emergency Patient Details
@@ -308,7 +193,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
             </div>
 
             {/* 3. Mobile No. */}
-            <div>
+            <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <Phone className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                 <span>{t.phone}</span>
@@ -334,21 +219,6 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                   {isListeningPhone ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
                 </button>
               </div>
-            </div>
-
-            {/* 4. ABHA Password / PIN */}
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
-                <Lock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.abhaPassword}</span>
-              </label>
-              <input
-                type="password"
-                value={abhaPassword}
-                onChange={(e) => setAbhaPassword(e.target.value)}
-                placeholder={t.abhaPasswordPlaceholder}
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none"
-              />
             </div>
 
           </div>

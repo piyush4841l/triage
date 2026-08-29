@@ -29,36 +29,43 @@ export function speakText(text: string, lang: Language = "en", onEnd?: () => voi
   // Cancel any ongoing speech
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.95; // Slightly slower for clear kiosk audibility
-  utterance.pitch = 1.0;
-  
-  const targetLocale = LANG_LOCALE_MAP[lang] || "en-IN";
-  utterance.lang = targetLocale;
+  // Short timeout prevents Chrome bug where cancel() immediately followed by speak() drops the audio or overlaps
+  setTimeout(() => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95; // Slightly slower for clear kiosk audibility
+    utterance.pitch = 1.0;
+    
+    const targetLocale = LANG_LOCALE_MAP[lang] || "en-IN";
+    utterance.lang = targetLocale;
 
-  // Try to find a natural native voice for the selected language
-  const voices = window.speechSynthesis.getVoices();
-  const targetPrefix = lang.toLowerCase();
-  
-  const targetVoice = voices.find((v) => {
-    const vLang = v.lang.toLowerCase();
-    return (
-      vLang === targetLocale.toLowerCase() ||
-      vLang.startsWith(targetPrefix) ||
-      (lang === "en" && (vLang === "en-in" || v.name.toLowerCase().includes("india") || vLang.startsWith("en")))
-    );
-  });
+    // Try to find a natural native voice for the selected language
+    const voices = window.speechSynthesis.getVoices();
+    
+    let targetVoice = null;
+    
+    if (lang === "hi") {
+      targetVoice = voices.find(v => 
+        v.lang.toLowerCase() === "hi-in" || 
+        v.lang.toLowerCase().startsWith("hi") || 
+        v.name.toLowerCase().includes("hindi")
+      );
+    } else {
+      // Default to English (India) if possible, else any English
+      targetVoice = voices.find(v => v.lang.toLowerCase() === "en-in" || v.name.toLowerCase().includes("india")) || 
+                    voices.find(v => v.lang.toLowerCase().startsWith("en"));
+    }
 
-  if (targetVoice) {
-    utterance.voice = targetVoice;
-  }
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+    }
 
-  if (onEnd) {
-    utterance.onend = onEnd;
-    utterance.onerror = onEnd;
-  }
+    if (onEnd) {
+      utterance.onend = onEnd;
+      utterance.onerror = onEnd;
+    }
 
-  window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(utterance);
+  }, 50);
 }
 
 export function stopSpeaking() {
