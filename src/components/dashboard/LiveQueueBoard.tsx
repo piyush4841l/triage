@@ -89,6 +89,7 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ lang, voiceGuide
   ];
 
   const filteredTokens = tokens.filter((t) => {
+    if (t.status === "COMPLETED") return false;
     if (selectedDept === "ALL") return true;
     return t.result.department === selectedDept;
   });
