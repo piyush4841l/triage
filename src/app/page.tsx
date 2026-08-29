@@ -278,7 +278,7 @@ export default function KioskPage() {
         )}
 
         {/* Content Box */}
-        <div className="flex-1 w-full max-w-4xl flex justify-center">
+        <div className="flex-1 w-full max-w-4xl flex justify-center pb-8 sm:pb-16">
           <div className="w-full scale-100 sm:scale-105 origin-top transition-transform duration-300">
 
         {/* Step 0: Landing / Start Screen */}
