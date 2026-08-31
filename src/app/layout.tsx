@@ -32,15 +32,9 @@ export default function RootLayout({
         {/* Doctor background image — very subtle texture */}
         <div
           aria-hidden="true"
-<<<<<<< HEAD
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.35] dark:opacity-[0.30] transition-opacity duration-300"
           style={{
             backgroundImage: `url('/images/hospital-ward-bg.jpg')`,
-=======
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15 dark:opacity-10"
-          style={{
-            backgroundImage: `url('/images/doctor-bg.jpg')`,
->>>>>>> ui2
             backgroundAttachment: "fixed",
           }}
         />
