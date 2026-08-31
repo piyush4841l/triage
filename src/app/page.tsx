@@ -18,11 +18,24 @@ import { StoredToken, addToken } from "@/lib/store";
 import { speakText } from "@/lib/speech";
 import { INDIAN_STATES } from "@/lib/states-languages";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
+import { useLanguage } from "@/lib/language-context";
 
 export default function KioskPage() {
   const [selectedState, setSelectedState] = useState<string>("national");
-  const [lang, setLang] = useState<Language>("en");
-  const [voiceGuide, setVoiceGuide] = useState<boolean>(false);
+  const { lang, setLang } = useLanguage();
+  const [voiceGuide, setVoiceGuideRaw] = useState<boolean>(false);
+
+  const setVoiceGuide = (val: boolean) => {
+    setVoiceGuideRaw(val);
+    sessionStorage.setItem("voice_guide_on", String(val));
+  };
+
+  // Restore voice guide state from sessionStorage after mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem("voice_guide_on");
+    if (saved === "true") setVoiceGuideRaw(true);
+  }, []);
+
   const [voiceLang, setVoiceLang] = useState<Language>("hi");
 
   // Flow State: 0 = Landing, 1 = Registration, 2 = Anatomy Map, 3 = OCR Upload, 4 = Token Receipt
@@ -96,16 +109,20 @@ export default function KioskPage() {
     if (!voiceGuide) return;
     const activeVoice = (lang !== "en" && lang !== "hi") ? voiceLang : lang;
     const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
-    if (currentStep === 1) {
+    if (currentStep === 0) {
+      speakText(prompts.step0, activeVoice);
+    } else if (currentStep === 1) {
       speakText(prompts.step1, activeVoice);
     } else if (currentStep === 2) {
-      speakText(prompts.step2, activeVoice);
+      if (!isDrillDownOpen) {
+        speakText(prompts.step2, activeVoice);
+      }
     } else if (currentStep === 3) {
       speakText(prompts.step3, activeVoice);
     } else if (currentStep === 4) {
       speakText(prompts.step4, activeVoice);
     }
-  }, [currentStep, lang, voiceGuide, voiceLang]);
+  }, [currentStep, lang, voiceGuide, voiceLang, isDrillDownOpen]);
 
   // Auto-Reset Inactivity Timer
   const [showIdleWarning, setShowIdleWarning] = useState(false);
@@ -135,15 +152,15 @@ export default function KioskPage() {
       clearTimeout(warningTimer);
       clearTimeout(resetTimer);
 
-      // 60 seconds of inactivity triggers the warning modal
+      // 5 minutes (300,000 ms) of inactivity triggers the warning modal
       warningTimer = setTimeout(() => {
         setShowIdleWarning(true);
         
-        // 15 seconds to reply, otherwise hard reset
+        // 30 seconds to reply, otherwise hard reset
         resetTimer = setTimeout(() => {
           handleResetKioskInternal();
-        }, 15000);
-      }, 60000);
+        }, 30000);
+      }, 300000);
     };
 
     const handleActivity = () => resetTimers();
@@ -325,6 +342,7 @@ export default function KioskPage() {
     setIsEmergencyOpen(false);
     setIsWhatsAppOpen(false);
     sessionStorage.removeItem("kiosk_session_state");
+    sessionStorage.removeItem("emergency_token");
   };
 
   const handleEmergencyTokenGenerated = (token: StoredToken) => {
@@ -333,11 +351,9 @@ export default function KioskPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors">
+    <div className="h-screen max-h-screen overflow-hidden flex flex-col transition-colors">
       {/* Top Kiosk Navbar */}
       <Navbar
-        selectedState={selectedState}
-        onStateChange={handleStateChange}
         lang={lang}
         onLanguageChange={setLang}
         voiceGuide={voiceGuide}
@@ -347,30 +363,21 @@ export default function KioskPage() {
         onOpenEmergency={() => setIsEmergencyOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center">
-        
-        {/* Step Indicator Wizard (Hidden on Step 0, vertical on desktop) */}
-        {currentStep > 0 && (
-          <div className="w-full sm:w-64 flex-shrink-0">
-            <StepIndicator
-              currentStep={currentStep}
-              lang={lang}
-              onStepClick={(step) => {
-                if (step < currentStep) setCurrentStep(step);
-              }}
-            />
-          </div>
-        )}
+      {/* Enhanced Doctor Background visibility specifically for Landing Page (Step 0) */}
+      {currentStep === 0 && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-25 dark:opacity-20 transition-opacity duration-500"
+          style={{
+            backgroundImage: `url('/images/doctor-bg.jpg')`,
+            backgroundAttachment: "fixed",
+          }}
+        />
+      )}
 
-        <div className="flex-1 w-full max-w-4xl flex justify-center pb-8 sm:pb-16 overflow-hidden sm:overflow-visible">
-          <div className="w-full scale-100 sm:scale-105 origin-top">
-            <div 
-              key={currentStep}
-              className="w-full animate-custom-slide-in"
-            >
-              {/* Step 0: Landing / Start Screen */}
-        {currentStep === 0 && (
+      {/* Main Content Area */}
+      {currentStep === 0 ? (
+        <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-center relative z-10 overflow-hidden">
           <LandingScreen 
             lang={lang}
             onStartReal={() => setCurrentStep(1)}
@@ -385,67 +392,81 @@ export default function KioskPage() {
               setCurrentStep(1);
             }}
           />
-        )}
+        </main>
+      ) : (
+        <main className="flex-1 min-h-0 w-full flex flex-col md:flex-row items-stretch overflow-hidden">
+          
+          {/* L-Shape Left Wing: Sticky to viewport so Cancel/Reset button is ALWAYS visible */}
+          <aside className="w-full md:w-72 lg:w-80 flex-shrink-0 border-r border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-4 sm:p-5 flex flex-col justify-between transition-colors shadow-sm h-full overflow-hidden">
+            <StepIndicator
+              currentStep={currentStep}
+              lang={lang}
+              registrationData={registrationData}
+              onStepClick={(step) => {
+                if (step < currentStep) setCurrentStep(step);
+              }}
+              onResetKiosk={handleResetKiosk}
+            />
+          </aside>
 
-        {/* Step 1: Patient Registration & Identification */}
-        {currentStep === 1 && (
-          <PatientRegistration
-            initialData={registrationData}
-            onProceed={handleRegistrationProceed}
-            onEmergencyTokenGenerated={handleEmergencyTokenGenerated}
-            lang={lang}
-            voiceGuide={voiceGuide}
-          />
-        )}
+          {/* Right Main Content Panel */}
+          <section className="flex-1 min-h-0 p-2 sm:p-4 flex justify-center items-center overflow-hidden">
+            <div className="w-full max-w-5xl my-auto animate-custom-slide-in">
+              {/* Step 1: Patient Registration & Identification */}
+              {currentStep === 1 && (
+                <PatientRegistration
+                  initialData={registrationData}
+                  onProceed={handleRegistrationProceed}
+                  onEmergencyTokenGenerated={handleEmergencyTokenGenerated}
+                  lang={lang}
+                  voiceGuide={voiceGuide}
+                />
+              )}
 
-        {/* Step 2: Interactive Anatomical Skeleton Map with Seamless Slide-Down Symptom Flow */}
-        {currentStep === 2 && (
-          <AnatomicalSkeletonMap
-            selectedRegions={selectedRegions}
-            onToggleRegion={handleToggleRegion}
-            onClearRegions={handleClearRegions}
-            symptomData={symptomData}
-            onUpdateSymptomData={setSymptomData}
-            onProceedToNextStep={(data) => {
-              setSymptomData(data);
-              setCurrentStep(3);
-            }}
-            lang={lang}
-            voiceGuide={voiceGuide}
-          />
-        )}
+              {/* Step 2: Interactive Anatomical Skeleton Map */}
+              {currentStep === 2 && (
+                <AnatomicalSkeletonMap
+                  selectedRegions={selectedRegions}
+                  onToggleRegion={handleToggleRegion}
+                  onClearRegions={handleClearRegions}
+                  symptomData={symptomData}
+                  onUpdateSymptomData={setSymptomData}
+                  onProceedToNextStep={(data) => {
+                    setSymptomData(data);
+                    setCurrentStep(3);
+                  }}
+                  onBack={() => setCurrentStep(1)}
+                  lang={lang}
+                  voiceGuide={voiceGuide}
+                />
+              )}
 
-        {/* Step 3: Medical Record Upload (OCR) */}
-        {currentStep === 3 && (
-          <DocumentUpload
-            onProceed={handleOcrProceed}
-            onSkip={handleOcrSkip}
-            onBack={() => setCurrentStep(2)}
-            lang={lang}
-            voiceGuide={voiceGuide}
-          />
-        )}
+              {/* Step 3: Medical Record Upload (OCR) */}
+              {currentStep === 3 && (
+                <DocumentUpload
+                  onProceed={handleOcrProceed}
+                  onSkip={handleOcrSkip}
+                  onBack={() => setCurrentStep(2)}
+                  lang={lang}
+                  voiceGuide={voiceGuide}
+                />
+              )}
 
-        {/* Step 4: Token Receipt & Thermal Slip */}
-        {currentStep === 4 && generatedToken && (
-          <TokenReceiptModal
-            token={generatedToken}
-            lang={lang}
-            voiceGuide={voiceGuide}
-            onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
-            onReset={handleResetKiosk}
-          />
-        )}
+              {/* Step 4: Token Receipt & Thermal Slip */}
+              {currentStep === 4 && generatedToken && (
+                <TokenReceiptModal
+                  token={generatedToken}
+                  lang={lang}
+                  voiceGuide={voiceGuide}
+                  onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
+                  onReset={handleResetKiosk}
+                />
+              )}
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Empty Spacer to balance the layout and keep the center box perfectly centered */}
-        {currentStep > 0 && (
-          <div className="hidden sm:block sm:w-64 flex-shrink-0"></div>
-        )}
-
-      </main>
+        </main>
+      )}
 
       {/* Organ Drill-Down Modal */}
       <OrganDrillDownModal

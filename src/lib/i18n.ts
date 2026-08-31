@@ -1,17 +1,27 @@
 export type Language = 
   | "en" 
-  | "hi" 
-  | "mr" // Marathi
-  | "kn" // Kannada
-  | "ta" // Tamil
-  | "te" // Telugu
-  | "bn" // Bengali
-  | "gu" // Gujarati
-  | "pa" // Punjabi
-  | "ml" // Malayalam
-  | "or" // Odia
-  | "as" // Assamese
-  | "ur"; // Urdu
+  | "as"  // Assamese (অসমীয়া)
+  | "bn"  // Bengali (বাংলা)
+  | "brx" // Bodo (बड़ो)
+  | "doi" // Dogri (डोगरी)
+  | "gu"  // Gujarati (ગુજરાતી)
+  | "hi"  // Hindi (हिंदी)
+  | "kn"  // Kannada (ಕನ್ನಡ)
+  | "ks"  // Kashmiri (कॉशुर / كٲشُر)
+  | "kok" // Konkani (कोंकणी)
+  | "mai" // Maithili (मैथिली)
+  | "ml"  // Malayalam (മലയാളം)
+  | "mni" // Manipuri (Meitei) (মৈতৈলোন্)
+  | "mr"  // Marathi (मराठी)
+  | "ne"  // Nepali (नेपाली)
+  | "or"  // Odia (ଓଡ଼ିଆ)
+  | "pa"  // Punjabi (ਪੰਜਾਬੀ)
+  | "sa"  // Sanskrit (संस्कृतम्)
+  | "sat" // Santali (ᱥᱟᱱᱛᱟᱲᱤ / संताली)
+  | "sd"  // Sindhi (سنڌي / सिन्धी)
+  | "ta"  // Tamil (தமிழ்)
+  | "te"  // Telugu (తెలుగు)
+  | "ur"; // Urdu (اردو)
 
 export interface TranslationDictionary {
   // App Header & Navigation
@@ -233,14 +243,14 @@ const baseEnglish: TranslationDictionary = {
   abhaPasswordPlaceholder: "Enter ABHA Password / PIN",
   pleaseEnterAbhaPassword: "Enter ABHA PIN / Password",
 
-  step2Title: "Interactive Anatomical Symptom Mapping",
-  step2Subtitle: "Touch or click the affected body parts on the human model. You can select multiple areas.",
+  step2Title: "Select Pain & Symptoms",
+  step2Subtitle: "Touch or click the affected body parts on the model or select from the list.",
   frontView: "Front View",
   backView: "Back / Spine View",
   selectedZones: "Selected Zones",
   clearSelection: "Clear All",
   tapToSelectRegion: "Tap any body region to select pain areas",
-  zonesSelectedCount: "zone(s) selected",
+  zonesSelectedCount: "zones selected",
   continueToSymptoms: "Continue to Symptom Details",
   selectAtLeastOneZone: "Please tap at least one body part or use Emergency Fast-Track",
 
@@ -272,7 +282,7 @@ const baseEnglish: TranslationDictionary = {
 
   step3Title: "Upload Past Medical Records (Optional)",
   step3Subtitle: "Upload previous doctor prescriptions or lab reports for AI OCR extraction. You can skip this step.",
-  dragDropText: "Drag & drop prescription/report image or PDF here",
+  dragDropText: "Upload Documents",
   orBrowseFile: "Browse from device or take photo",
   uploadPrescriptionPdf: "Supports JPG, PNG, PDF up to 10MB",
   skipStep: "Skip & Generate Token Now",
@@ -304,7 +314,7 @@ const baseEnglish: TranslationDictionary = {
   printThermalSlip: "🖨️ Print 80mm Thermal Receipt Slip",
   sendWhatsApp: "📱 Send Token to WhatsApp",
   trackLiveQueue: "🔍 Track Live Queue on Phone",
-  createNewToken: "Done / Register Another Patient",
+  createNewToken: "Register New Patient",
 
   emergencyModalTitle: "🚨 Emergency Fast-Track Protocol",
   emergencyModalSubtitle: "Instant high-priority token dispatch bypassing standard queues in under 15 seconds.",
@@ -397,7 +407,7 @@ const baseHindi: TranslationDictionary = {
   abhaPasswordPlaceholder: "आभा पासवर्ड / पिन दर्ज करें",
   pleaseEnterAbhaPassword: "आभा पिन दर्ज करें",
 
-  step2Title: "मानव शरीर दर्द व लक्षण चयन",
+  step2Title: "दर्द और लक्षण चुनें",
   step2Subtitle: "मानव शरीर के चित्र पर जहां दर्द या समस्या है, वहां छूएं। एक से अधिक अंग चुन सकते हैं।",
   frontView: "सामने का दृश्य",
   backView: "पीछे / रीढ़ का दृश्य",
@@ -436,7 +446,7 @@ const baseHindi: TranslationDictionary = {
 
   step3Title: "पुराने मेडिकल पर्चे या रिपोर्ट अपलोड करें (वैकल्पिक)",
   step3Subtitle: "पुराने डॉक्टर के पर्चे या खून जांच रिपोर्ट की फोटो अपलोड करें। इसे छोड़ भी सकते हैं।",
-  dragDropText: "पर्चे या रिपोर्ट की फोटो / पीडीएफ यहां खींचें",
+  dragDropText: "दस्तावेज़ अपलोड करें (Upload Documents)",
   orBrowseFile: "डिवाइस से चुनें या फोटो खींचें",
   uploadPrescriptionPdf: "JPG, PNG, PDF (10MB तक)",
   skipStep: "छोड़ें और सीधे टोकन बनाएं",
@@ -468,7 +478,7 @@ const baseHindi: TranslationDictionary = {
   printThermalSlip: "🖨️ 80mm थर्मल रसीद प्रिंट करें",
   sendWhatsApp: "📱 व्हाट्सएप पर टोकन भेजें",
   trackLiveQueue: "🔍 फोन पर लाइव कतार देखें",
-  createNewToken: "समाप्त / नया मरीज पंजीकृत करें",
+  createNewToken: "नया मरीज पंजीकृत करें",
 
   emergencyModalTitle: "🚨 आपातकालीन फास्ट-ट्रैक प्रोटोकॉल",
   emergencyModalSubtitle: "15 सेकंड से भी कम समय में बिना कतार तत्काल उच्च प्राथमिकता टोकन प्राप्त करें।",
@@ -544,7 +554,7 @@ const baseMarathi: TranslationDictionary = {
   quickFillDemo: "डेमो प्रोफाइल भरा",
   demoPatientChest: "रमेश (छातीत तीव्र वेदना)",
   demoPatientStomach: "सुनीता (तीव्र पित्त / पोटदुखी)",
-  nextStep: "पुढील: दुखणारे अवयव निवडा",
+  nextStep: "पुढे",
   back: "मागे जा",
   pleaseEnterPhone: "कृपया १० अंकी वैध मोबाईल नंबर प्रविष्ट करा",
   pleaseEnterName: "कृपया रुग्णाचे नाव प्रविष्ट करा",
@@ -649,7 +659,7 @@ const baseKannada: TranslationDictionary = {
   ...baseEnglish,
   appTitle: "ಸ್ಮಾರ್ಟ್ ಟ್ರಯೇಜ್ ಮತ್ತು ಓಪಿಡಿ ಟೋಕನ್ ಕಿಯೋಸ್ಕ್",
   appSubtitle: "ಎಐ ಆಧಾರಿತ ರೋಗಿ ಸ್ವಯಂ ನೋಂದಣಿ ಮತ್ತು ಸಾಲು ನಿರ್ವಹಣೆ",
-  emergencyFastTrack: "🚨 ತುರ್ತು ಸೇವೆ (EMERGENCY)",
+  emergencyFastTrack: "🚨 ತುರ್ತು ಸೇವೆ",
   voiceGuide: "ಧ್ವನಿ ಸಹಾಯಕ",
   voiceGuideActive: "ಧ್ವನಿ ಸಹಾಯಕ (ಸಕ್ರಿಯ)",
   kioskHome: "ಮುಖಪುಟ",
@@ -668,7 +678,7 @@ const baseKannada: TranslationDictionary = {
   other: "ಇತರೆ",
   phone: "೧೦ ಅಂಕಿಗಳ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
   phonePlaceholder: "ಉದಾ. ೯೮೭೬೫೪೩೨೧೦",
-  nextStep: "ಮುಂದೆ: ನೋವಿರುವ ಅಂಗಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  nextStep: "ಮುಂದೆ",
   back: "ಹಿಂದೆ",
 
   step2Title: "ಮಾನವ ದೇಹದ ನೋವಿನ ಭಾಗಗಳ ನಕ್ಷೆ",
@@ -731,7 +741,7 @@ const baseTamil: TranslationDictionary = {
   ...baseEnglish,
   appTitle: "ஸ்மார்ட் ட்ரையேஜ் மற்றும் ஓபிடி டோக்கன் கியோஸ்க்",
   appSubtitle: "AI அடிப்படையிலான நோயாளி சுய பதிவு மற்றும் வரிசை மேலாண்மை",
-  emergencyFastTrack: "🚨 அவசர சிகிச்சை (EMERGENCY)",
+  emergencyFastTrack: "🚨 அவசர சிகிச்சை",
   voiceGuide: "குரல் உதவியாளர்",
   voiceGuideActive: "குரல் உதவியாளர் (இயக்கத்தில்)",
   kioskHome: "முகப்பு",
@@ -750,7 +760,7 @@ const baseTamil: TranslationDictionary = {
   other: "மற்றவை",
   phone: "10 இலக்க மொபைல் எண்",
   phonePlaceholder: "எ.கா. 9876543210",
-  nextStep: "அடுத்து: வலி உள்ள பகுதிகளைத் தேர்ந்தெடுக்கவும்",
+  nextStep: "அடுத்து",
   back: "பின்செல்லவும்",
 
   step2Title: "மனித உடல் வலி வரைபடம்",
@@ -812,7 +822,7 @@ const baseTamil: TranslationDictionary = {
 const baseTelugu: TranslationDictionary = {
   ...baseEnglish,
   appTitle: "స్మార్ట్ ట్రయాజ్ & ఓపీడీ టోకెన్ కియోస్క్",
-  emergencyFastTrack: "🚨 అత్యవసర సేవ (EMERGENCY)",
+  emergencyFastTrack: "🚨 అత్యవసర సేవ",
   voiceGuide: "వాయిస్ అసిస్టెంట్",
   kioskHome: "హోమ్",
   selectState: "రాష్ట్రం ఎంచుకోండి",
@@ -828,7 +838,7 @@ const baseTelugu: TranslationDictionary = {
   female: "స్త్రీ",
   other: "ఇతర",
   phone: "10 అంకెల మొబైల్ నంబర్",
-  nextStep: "తర్వాత: నొప్పి ఉన్న శరీర భాగాలను ఎంచుకోండి",
+  nextStep: "తర్వాత",
   back: "వెనుకకు",
 
   step2Title: "మానవ శరీర నొప్పి మ్యాప్",
@@ -875,7 +885,7 @@ const baseTelugu: TranslationDictionary = {
 const baseBengali: TranslationDictionary = {
   ...baseEnglish,
   appTitle: "স্মার্ট ট্রায়াজ এবং ওপিডি টোকেন কিয়স্ক",
-  emergencyFastTrack: "🚨 জরুরি সেবা (EMERGENCY)",
+  emergencyFastTrack: "🚨 জরুরি সেবা",
   voiceGuide: "ভয়েস সহায়ক",
   kioskHome: "হোম পেজ",
   selectState: "রাজ্য নির্বাচন করুন",
@@ -891,7 +901,7 @@ const baseBengali: TranslationDictionary = {
   female: "মহিলা",
   other: "অন্যান্য",
   phone: "১০ অঙ্কের মোবাইল নম্বর",
-  nextStep: "পরবর্তী: ব্যথার অঙ্গ নির্বাচন করুন",
+  nextStep: "পরবর্তী",
   back: "পেছনে যান",
 
   step2Title: "মানব শরীরের ব্যথার মানচিত্র",
@@ -954,7 +964,7 @@ const baseGujarati: TranslationDictionary = {
   female: "સ્ત્રી",
   other: "અન્ય",
   phone: "10 અંકનો મોબાઇલ નંબર",
-  nextStep: "આગળ: દુખાવાના અંગો પસંદ કરો",
+  nextStep: "આગળ",
   back: "પાછા જાઓ",
 
   step2Title: "માનવ શરીર દુખાવો નકશો",
@@ -998,7 +1008,7 @@ const baseGujarati: TranslationDictionary = {
 const basePunjabi: TranslationDictionary = {
   ...baseHindi,
   appTitle: "ਸਮਾਰਟ ਟ੍ਰਾਈਏਜ ਅਤੇ ਓਪੀਡੀ ਟੋਕਨ ਕਿਓਸਕ",
-  emergencyFastTrack: "🚨 ਐਮਰਜੈਂਸੀ ਸੇਵਾ (EMERGENCY)",
+  emergencyFastTrack: "🚨 ਐਮਰਜੈਂਸੀ ਸੇਵਾ",
   voiceGuide: "ਆਵਾਜ਼ ਸਹਾਇਕ",
   kioskHome: "ਮੁੱਖ ਸਫ਼ਾ",
   selectState: "ਰਾਜ ਚੁਣੋ",
@@ -1014,7 +1024,7 @@ const basePunjabi: TranslationDictionary = {
   female: "ਮਹਿਲਾ",
   other: "ਹੋਰ",
   phone: "10 ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ",
-  nextStep: "ਅੱਗੇ: ਦਰਦ ਵਾਲੇ ਅੰਗ ਚੁਣੋ",
+  nextStep: "ਅੱਗੇ",
   back: "ਪਿੱਛੇ",
 
   step2Title: "ਮਨੁੱਖੀ ਸਰੀਰ ਦਰਦ ਦਾ ਨਕਸ਼ਾ",
@@ -1058,7 +1068,7 @@ const basePunjabi: TranslationDictionary = {
 const baseMalayalam: TranslationDictionary = {
   ...baseEnglish,
   appTitle: "സ്മാർട്ട് ട്രയാജ് & ഒപിഡി ടോക്കൺ കിയോസ്ക്",
-  emergencyFastTrack: "🚨 അടിയന്തര ചികിത്സ (EMERGENCY)",
+  emergencyFastTrack: "🚨 അടിയന്തര ചികിത്സ",
   voiceGuide: "ശബ്ദ സഹായി",
   kioskHome: "ഹോം പേജ്",
   selectState: "സംസ്ഥാനം തിരഞ്ഞെടുക്കുക",
@@ -1074,7 +1084,7 @@ const baseMalayalam: TranslationDictionary = {
   female: "സ്ത്രീ",
   other: "മറ്റുള്ളവ",
   phone: "10 അക്ക മൊബൈൽ നമ്പർ",
-  nextStep: "അടുത്തത്: വേദനയുള്ള ഭാഗങ്ങൾ തിരഞ്ഞെടുക്കുക",
+  nextStep: "അടുത്തത്",
   back: "പിന്നോട്ട്",
 
   step2Title: "ശരീര വേദന മാപ്പ്",
@@ -1118,7 +1128,7 @@ const baseMalayalam: TranslationDictionary = {
 const baseOdia: TranslationDictionary = {
   ...baseHindi,
   appTitle: "ସ୍ମାର୍ଟ ଟ୍ରାଇଏଜ୍ ଏବଂ ଓପିଡି ଟୋକନ୍ କିଓସ୍କ",
-  emergencyFastTrack: "🚨 ଜରୁରୀକାଳୀନ ସେବା (EMERGENCY)",
+  emergencyFastTrack: "🚨 ଜରୁରୀକାଳୀନ ସେବା",
   voiceGuide: "ଭଏସ୍ ସହାୟକ",
   kioskHome: "ମୁଖ୍ୟ ପୃଷ୍ଠା",
   selectState: "ରାଜ୍ୟ ଚୟନ କରନ୍ତୁ",
@@ -1132,7 +1142,7 @@ const baseOdia: TranslationDictionary = {
   female: "ମହିଳା",
   other: "ଅନ୍ୟାନ୍ୟ",
   phone: "୧୦ ଅଙ୍କ ବିଶିଷ୍ଟ ମୋବାଇଲ୍ ନମ୍ବର",
-  nextStep: "ପରବର୍ତ୍ତୀ: ଯନ୍ତ୍ରଣା ଅଙ୍ଗ ଚୟନ କରନ୍ତୁ",
+  nextStep: "ପରବର୍ତ୍ତୀ",
   back: "ପଛକୁ",
 
   step2Title: "ମାନବ ଶରୀର ଯନ୍ତ୍ରଣା ମାନଚିତ୍ର",
@@ -1170,7 +1180,7 @@ const baseOdia: TranslationDictionary = {
 const baseAssamese: TranslationDictionary = {
   ...baseBengali,
   appTitle: "স্মাৰ্ট ট্ৰায়াজ আৰু ওপিডি টোকেন কিঅ'স্ক",
-  emergencyFastTrack: "🚨 জৰুৰীকালীন সেৱা (EMERGENCY)",
+  emergencyFastTrack: "🚨 জৰুৰীকালীন সেৱা",
   voiceGuide: "ভইচ সহায়ক",
   kioskHome: "মূল পৃষ্ঠা",
   selectState: "ৰাজ্য বাছক",
@@ -1184,7 +1194,7 @@ const baseAssamese: TranslationDictionary = {
   female: "মহিলা",
   other: "অন্যান্য",
   phone: "১০ টা সংখ্যাৰ মোবাইল নম্বৰ",
-  nextStep: "পৰৱৰ্তী: বিষৰ অংগ বাছক",
+  nextStep: "পৰৱৰ্তী",
   back: "পিছলৈ",
 
   step2Title: "মানৱ শৰীৰ বিষৰ মানচিত্ৰ",
@@ -1222,7 +1232,7 @@ const baseAssamese: TranslationDictionary = {
 const baseUrdu: TranslationDictionary = {
   ...baseHindi,
   appTitle: "اسمارٹ ٹرائیج اور او پی ڈی ٹوکن کیوسک",
-  emergencyFastTrack: "🚨 ہنگامی سروس (EMERGENCY)",
+  emergencyFastTrack: "🚨 ہنگامی سروس",
   voiceGuide: "صوتی معاون",
   kioskHome: "مرکزی صفحہ",
   selectState: "ریاست منتخب کریں",
@@ -1238,7 +1248,7 @@ const baseUrdu: TranslationDictionary = {
   female: "عورت",
   other: "دیگر",
   phone: "10 ہندسوں کا موبائل نمبر",
-  nextStep: "اگلا: درد کا حصہ منتخب کریں",
+  nextStep: "اگلا",
   back: "پیچھے",
 
   step2Title: "انسانی جسم درد کا نقشہ",
@@ -1270,18 +1280,535 @@ const baseUrdu: TranslationDictionary = {
   createNewToken: "نیا مریض درج کریں",
 };
 
+
+
+// -------------------------------------------------------------
+// Bodo (बड़ो)
+// -------------------------------------------------------------
+const baseBodo: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "स्मार्ट ट्राइएज आरो ओपिडि टोकन किओस्क (Bodo)",
+  appSubtitle: "AI-मददजों गावनि मुं थिसननाय आरो लारि सामलायनाय",
+  emergencyFastTrack: "🚨 गोख्रों रैखा",
+  voiceGuide: "राव हेफाजाब",
+  selectLanguage: "राव",
+  step1Title: "मरीज मुं थिसननाय",
+  step1Subtitle: "नोंथांनि मोन्दांथि हो नङाब्ला बुं।",
+  fullName: "आबुं मुं",
+  age: "बैसो (बोसोर)",
+  gender: "लिंग",
+  male: "हौवा",
+  female: "हिनजाव",
+  other: "गुबुन",
+  phone: "10-अनजिमा मोवाइल नम्बर",
+  nextStep: "थांखि / सिगां",
+  back: "उनजाय",
+  step2Title: "सानाय मोन्दांथि देहा मेप",
+  step2Subtitle: "सानाय बाहागोखौ थु।",
+  frontView: "सिगांनि नुथाय",
+  backView: "उननि नुथाय",
+  selectedZones: "सायखनाय बाहागो",
+  clearSelection: "गासैबो फोजोब",
+  continueToSymptoms: "सानायनि गुवार खौरां",
+  regionHeadNeck: "खर\x27 आरो गोदोना",
+  regionChest: "बिखा आरो खारै",
+  regionAbdomen: "उदै आरो फाचन",
+  regionSpineBack: "बिजिर आरो अनान",
+  regionArms: "आखाय आरो आथिं",
+  regionPelvis: "खांखोर",
+  regionLegsJoints: "आथिं आरो जोइन्ट",
+  regionSkinGeneral: "बिगुर / गासै देहा",
+  tokenGeneratedTitle: "टोकन जाफुंसारै सोमजिखाबाय!",
+  tokenNumber: "टोकन अनजिमा",
+  department: "बिफान",
+  roomCounter: "खथा आरो काउन्टार",
+  estimatedWait: "सानमोन्दां सम",
+  minutes: "मिनिट",
+  printThermalSlip: "🖨️ रसीद प्रिन्ट खालाम",
+  sendWhatsApp: "📱 ह्वाट्सएपआव थिनहर",
+  createNewToken: "गोदान मरीज थिसन",
+};
+
+// -------------------------------------------------------------
+// Dogri (डोगरी)
+// -------------------------------------------------------------
+const baseDogri: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "स्मार्ट ट्राइएज ते ओपीडी टोकन कियोस्क (डोगरी)",
+  appSubtitle: "एआई-संचालित मरीज पंजीकरण ते कतार प्रबंधन",
+  emergencyFastTrack: "🚨 आपातकालीन सेवा",
+  voiceGuide: "आवाज सहायक",
+  selectLanguage: "बोली / भाषा",
+  step1Title: "मरीज पंजीकरण ते पहचान",
+  step1Subtitle: "अपणी जानकारी दर्ज करो जां बोलिये दस्सो।",
+  fullName: "पूरा नां",
+  age: "उमर (साल)",
+  gender: "लिंग",
+  male: "मर्द",
+  female: "जनानी",
+  other: "होर",
+  phone: "10-अंकी मोबाइल नंबर",
+  nextStep: "अग्गे",
+  back: "पिच्छे",
+  step2Title: "शरीर दा दर्द नक्शा",
+  step2Subtitle: "दर्द आले अंगै गी छुओ जां चुनो।",
+  frontView: "साम्हने दा रूप",
+  backView: "पिच्छला रूप",
+  selectedZones: "चुनेदे हिस्से",
+  clearSelection: "सब साफ करो",
+  continueToSymptoms: "लक्षणें दा विवरण",
+  regionHeadNeck: "सिर ते गर्दन",
+  regionChest: "छाती ते पसलियां",
+  regionAbdomen: "पेट ते पाचन",
+  regionSpineBack: "कंड ते मेरुदंड",
+  regionArms: "बाहवां ते मोढे",
+  regionPelvis: "कमर ते पेल्विस",
+  regionLegsJoints: "लत्तां, गोड्डे ते जोड़",
+  regionSkinGeneral: "चमड़ी / पूरा शरीर",
+  tokenGeneratedTitle: "टोकन सफलतापूर्वक जारी होई गेया!",
+  tokenNumber: "टोकन नंबर",
+  department: "विभाग",
+  roomCounter: "कमरा ते काउंटर",
+  estimatedWait: "अनुमानित समां",
+  minutes: "मिनट",
+  printThermalSlip: "🖨️ पर्ची प्रिंट करो",
+  sendWhatsApp: "📱 व्हाट्सऐप पर भेजो",
+  createNewToken: "नवां मरीज दर्ज करो",
+};
+
+// -------------------------------------------------------------
+// Kashmiri (कॉशुर / كٲشُر)
+// -------------------------------------------------------------
+const baseKashmiri: TranslationDictionary = {
+  ...baseUrdu,
+  appTitle: "سمارٹ ٹرائیج تہٕ او پی ڈی ٹوکن کیوسک (کٲشُر)",
+  appSubtitle: "اے آئی مریض اندراج تہٕ قطار انتظام",
+  emergencyFastTrack: "🚨 ہنگامی سروس",
+  voiceGuide: "آوازک مددگار",
+  selectLanguage: "زبان",
+  step1Title: "مریض سند اندراج",
+  step1Subtitle: "پنین تفصیٖلات درج کٔریو یا بٲن کٔریو۔",
+  fullName: "پوٗرٕ ناو",
+  age: "وٲنس (ؤری)",
+  gender: "جنس",
+  male: "مرد",
+  female: "زنان",
+  other: "بیاکھ",
+  phone: "10 ہندسَن ہند موبائل نمبر",
+  nextStep: "برونہہ کن",
+  back: "پتھ کن",
+  step2Title: "جسمچ دگک نقشہٕ",
+  step2Subtitle: "دگ وٲلِس حصَس پؠٹھ کٔریو ٹچ۔",
+  frontView: "برونہم نظارہ",
+  backView: "پتھم نظارہ",
+  selectedZones: "منتخب حصہٕ",
+  clearSelection: "سٲری صاف کٔریو",
+  continueToSymptoms: "علامتَن ہنز تفصیل",
+  regionHeadNeck: "کلہٕ تہٕ گردن",
+  regionChest: "سینہٕ تہٕ پسیل",
+  regionAbdomen: "میدٕ تہٕ یڈ",
+  regionSpineBack: "کمر تہٕ کنڈا",
+  regionArms: "اتھٕ تہٕ پیٹھ",
+  regionPelvis: "کمر تہٕ چولا",
+  regionLegsJoints: "زنگہٕ، کھور تہٕ گوڈٕ",
+  regionSkinGeneral: "چمڑٕ / پورٕ جسم",
+  tokenGeneratedTitle: "ٹوکن گو کامیابی سان جاری!",
+  tokenNumber: "ٹوکن نمبر",
+  department: "شعبہٕ",
+  roomCounter: "کمرٕ تہٕ کاؤنٹر",
+  estimatedWait: "تخمینی وقت",
+  minutes: "منٹ",
+  printThermalSlip: "🖨️ پرچی پرنٹ کٔریو",
+  sendWhatsApp: "📱 واٹس ایپ پؠٹھ سوزیو",
+  createNewToken: "نۆو مریض اندراج",
+};
+
+// -------------------------------------------------------------
+// Konkani (कोंकणी)
+// -------------------------------------------------------------
+const baseKonkani: TranslationDictionary = {
+  ...baseMarathi,
+  appTitle: "स्मार्ट ट्रायज आनी ओपीडी टोकन कियोस्क (कोंकणी)",
+  appSubtitle: "एआय-सक्षम दुयेंती नोंदणी आनी रांक व्यवस्थापन",
+  emergencyFastTrack: "🚨 तातडीची सेवा",
+  voiceGuide: "आवाज मार्गदर्शक",
+  selectLanguage: "भास",
+  step1Title: "दुयेंती नोंदणी आनी वळख",
+  step1Subtitle: "तुमची म्हायती बरोव्यात वा उलोवन सांगात.",
+  fullName: "पुरें नांव",
+  age: "पिराय (वर्सां)",
+  gender: "लिंग",
+  male: "दादलो",
+  female: "बाय्ल",
+  other: "हेर",
+  phone: "10-आंकडी मोबाईल नंबर",
+  nextStep: "मुखार",
+  back: "फाटीं",
+  step2Title: "कुडीचो दूख नकासो",
+  step2Subtitle: "दूख आशिल्ल्या भागाचेर स्पर्श करात.",
+  frontView: "मुखलो देखावो",
+  backView: "फाटलो देखावो",
+  selectedZones: "वेंचून काडिल्ले भाग",
+  clearSelection: "सगळें साफ करात",
+  continueToSymptoms: "लक्षणांचो तपशील",
+  regionHeadNeck: "तकली आनी गळो",
+  regionChest: "छाती आनी फासळ्यो",
+  regionAbdomen: "पोट आनी पचन",
+  regionSpineBack: "फाटीचो कणा आनी फाट",
+  regionArms: "हात आनी खांदे",
+  regionPelvis: "कमर आनी पेल्विस",
+  regionLegsJoints: "पांय, दिम आनी सांदे",
+  regionSkinGeneral: "कात / पुराय कूड",
+  tokenGeneratedTitle: "टोकन येशस्वीपणान जारी केलो!",
+  tokenNumber: "टोकन नंबर",
+  department: "विभाग",
+  roomCounter: "कूड आनी काउंटर",
+  estimatedWait: "अंदाजीत वेळ",
+  minutes: "मिनटां",
+  printThermalSlip: "🖨️ पावती प्रिंट करात",
+  sendWhatsApp: "📱 व्हॉट्सअ‍ॅपाचेर धाडांत",
+  createNewToken: "नवो दुयेंती नोंद करात",
+};
+
+// -------------------------------------------------------------
+// Maithili (मैथिली)
+// -------------------------------------------------------------
+const baseMaithili: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "स्मार्ट ट्राइएज आ ओपीडी टोकन कियोस्क (मैथिली)",
+  appSubtitle: "एआई-संचालित रोगी पंजीकरण आ पाँती प्रबंधन",
+  emergencyFastTrack: "🚨 आपातकालीन सेवा",
+  voiceGuide: "ध्वनि सहायक",
+  selectLanguage: "भाषा",
+  step1Title: "रोगी पंजीकरण आ पहचान",
+  step1Subtitle: "अपन विवरण दर्ज करू वा बोलि कऽ बताऊ।",
+  fullName: "पूरा नाम",
+  age: "उमिर (वर्ष)",
+  gender: "लिंग",
+  male: "पुरुष",
+  female: "महिला",
+  other: "अन्य",
+  phone: "10-अंकीय मोबाइल नंबर",
+  nextStep: "आगाँ",
+  back: "पाछाँ",
+  step2Title: "शारीरिक दर्द मानचित्र",
+  step2Subtitle: "पीड़ित अंग पर स्पर्श करू वा चुनू।",
+  frontView: "आगाँक दृश्य",
+  backView: "पाछाँक दृश्य",
+  selectedZones: "चुनल गेल भाग",
+  clearSelection: "सभटा साफ करू",
+  continueToSymptoms: "लक्षण विवरण",
+  regionHeadNeck: "माथ आ गर्दन",
+  regionChest: "छाती आ पंजर",
+  regionAbdomen: "पेट आ पाचन",
+  regionSpineBack: "पीठ आ मेरुदंड",
+  regionArms: "हाथ आ काँध",
+  regionPelvis: "कमर आ पेल्विस",
+  regionLegsJoints: "पैर, ठेहुन आ जोड़",
+  regionSkinGeneral: "चमड़ा / सम्पूर्ण देह",
+  tokenGeneratedTitle: "टोकन सफलतापूर्वक जारी भेल!",
+  tokenNumber: "टोकन नंबर",
+  department: "विभाग",
+  roomCounter: "कोठरी आ काउंटर",
+  estimatedWait: "अनुमानित समय",
+  minutes: "मिनट",
+  printThermalSlip: "🖨️ रसीद प्रिंट करू",
+  sendWhatsApp: "📱 व्हाट्सऐप पर पठाउ",
+  createNewToken: "नव रोगी दर्ज करू",
+};
+
+// -------------------------------------------------------------
+// Manipuri (Meitei) (মৈতৈলোন্)
+// -------------------------------------------------------------
+const baseManipuri: TranslationDictionary = {
+  ...baseBengali,
+  appTitle: "স্মার্ট ট্রাইয়েজ অমসুং ওপিডি টোকেন কিয়োস্ক (মৈতৈলোন্)",
+  appSubtitle: "AI-না শিজিন্নদুনা অনাবা মীওই রেজিষ্ট্রেশন অমসুং লাইরিং শেম্বা",
+  emergencyFastTrack: "🚨 অখন্নবা ইমার্জেন্সী",
+  voiceGuide: "খোন্থাোক্কী মতেং",
+  selectLanguage: "লোন",
+  step1Title: "অনাবা মীওই রেজিষ্ট্রেশন",
+  step1Subtitle: "নহাক্কী অকুপ্পা মরোলশিং ইখত্লু নত্রগা ঙাংলগা ফোংদোকউ।",
+  fullName: "অপূনবা মমিং",
+  age: "চহী",
+  gender: "লিংগ",
+  male: "নুপা",
+  female: "নুপী",
+  other: "অতোপ্পা",
+  phone: "১০-মশিংগী মোবাইল নম্বর",
+  nextStep: "মখা তাবা",
+  back: "হনবা",
+  step2Title: "হকচাংগী নানথিবা মেপ",
+  step2Subtitle: "অনাবা মফমদা থুংলগা খল্লু।",
+  frontView: "মাংথংবা উইউ",
+  backView: "তুংথংবা উইউ",
+  selectedZones: "খল্লবা মফমশিং",
+  clearSelection: "পুম্নমক মুত্থত্পা",
+  continueToSymptoms: "অনাবাগী লক্ষণশিং",
+  regionHeadNeck: "কোক অমসুং ঙক",
+  regionChest: "থবাক অমসুং য়োকশং",
+  regionAbdomen: "পুক অমসুং হকচাংগী কোং",
+  regionSpineBack: "নাকোল অমসুং মকু",
+  regionArms: "খুৎ অমসুং লেন্থাং",
+  regionPelvis: "খবাং অমসুং পেলভিস",
+  regionLegsJoints: "খোং, খুউ অমসুং মরু",
+  regionSkinGeneral: "উনসা / হকচাং পুম্বদা",
+  tokenGeneratedTitle: "টোকেন মায় পাক্না ফংলে!",
+  tokenNumber: "টোকেন নম্বর",
+  department: "বিভাগ",
+  roomCounter: "কা অমসুং কাউন্টার",
+  estimatedWait: "চাউরাকপা মতم",
+  minutes: "মিনিট",
+  printThermalSlip: "🖨️ চে-রসিদ প্রিন্ট তৌবা",
+  sendWhatsApp: "📱 হোয়াটসঅ্যাপতা থাবা",
+  createNewToken: "অনৌবা অনাবা মীওই হাপ্পা",
+};
+
+// -------------------------------------------------------------
+// Nepali (नेपाली)
+// -------------------------------------------------------------
+const baseNepali: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "स्मार्ट ट्राइएज र ओपीडी टोकन कियोस्क (नेपाली)",
+  appSubtitle: "एआई-संचालित बिरामी दर्ता र पालो व्यवस्थापन",
+  emergencyFastTrack: "🚨 आकस्मिक सेवा",
+  voiceGuide: "आवाज सहायक",
+  selectLanguage: "भाषा",
+  step1Title: "बिरामी दर्ता र पहिचान",
+  step1Subtitle: "आफ्नो विवरण प्रविष्ट गर्नुहोस् वा बोलेर बताउनुहोस्।",
+  fullName: "पूरा नाम",
+  age: "उमेर (वर्ष)",
+  gender: "लिङ्ग",
+  male: "पुरुष",
+  female: "महिला",
+  other: "अन्य",
+  phone: "१०-अङ्कको मोबाइल नम्बर",
+  nextStep: "अर्को",
+  back: "पछाडि",
+  step2Title: "शरीरको दुखाइ नक्सा",
+  step2Subtitle: "दुखेको भागमा छुनुहोस् वा सूचीबाट रोज्नुहोस्।",
+  frontView: "अगाडिको दृश्य",
+  backView: "पछाडिको दृश्य",
+  selectedZones: "छानिएका भागहरू",
+  clearSelection: "सबै हटाउनुहोस्",
+  continueToSymptoms: "लक्षणहरूको विवरण",
+  regionHeadNeck: "टाउको र घाँटी",
+  regionChest: "छाती र करङ",
+  regionAbdomen: "पेट र पाचन",
+  regionSpineBack: "ढाड र मेरुदण्ड",
+  regionArms: "हात र काँध",
+  regionPelvis: "कम्मर र पेल्भिस",
+  regionLegsJoints: "खुट्टा, घुँडा र जोर्नी",
+  regionSkinGeneral: "छाला / सम्पूर्ण शरीर",
+  tokenGeneratedTitle: "टोकन सफलतापूर्वक जारी गरियो!",
+  tokenNumber: "टोकन नम्बर",
+  department: "विभाग",
+  roomCounter: "कोठा र काउन्टर",
+  estimatedWait: "अनुमानित समय",
+  minutes: "मिनेट",
+  printThermalSlip: "🖨️ रसिद प्रिन्ट गर्नुहोस्",
+  sendWhatsApp: "📱 ह्वाट्सएपमा पठाउनुहोस्",
+  createNewToken: "नयाँ बिरामी दर्ता गर्नुहोस्",
+};
+
+// -------------------------------------------------------------
+// Sanskrit (संस्कृतम्)
+// -------------------------------------------------------------
+const baseSanskrit: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "स्मार्ट ट्राइएज तथा ओपीडी टोकन कियोस्क (संस्कृतम्)",
+  appSubtitle: "कृत्रिमप्रज्ञया रोगी पञ्जीकरणम् तथा क्रमप्रबन्धनम्",
+  emergencyFastTrack: "🚨 आपत्कालीन सेवा",
+  voiceGuide: "ध्वनिमार्गदर्शकः",
+  selectLanguage: "भाषा",
+  step1Title: "रोगी पञ्जीकरणम् तथा परिचयः",
+  step1Subtitle: "स्वविवरणं लिखन्तु अथवा वदन्तु।",
+  fullName: "पूर्णं नाम",
+  age: "आयुः (वर्षाणि)",
+  gender: "लिङ्गम्",
+  male: "पुरुषः",
+  female: "महिला",
+  other: "अन्यत्",
+  phone: "१०-अङ्कीयः चलदूरभाषक्रमाङ्कः",
+  nextStep: "अग्रिमम्",
+  back: "प्रतिगमनम्",
+  step2Title: "शारीरिक वेदना मानचित्रम्",
+  step2Subtitle: "वेदनायुक्तं भागं स्पृशन्तु वा चिनुत।",
+  frontView: "अग्रदृश्यम्",
+  backView: "पृष्ठदृश्यम्",
+  selectedZones: "चयनितभागाः",
+  clearSelection: "सर्वं दूरीकुरु",
+  continueToSymptoms: "लक्षणविवरणम्",
+  regionHeadNeck: "शिरः तथा ग्रीवा",
+  regionChest: "वक्षःस्थलम् तथा पर्शुकाः",
+  regionAbdomen: "उदरम् तथा पाचनतन्त्रम्",
+  regionSpineBack: "पृष्ठवंशः तथा पृष्ठम्",
+  regionArms: "हस्तौ तथा स्कन्धौ",
+  regionPelvis: "कटिः तथा श्रोणिः",
+  regionLegsJoints: "पादौ, जानूनी तथा सन्धयः",
+  regionSkinGeneral: "त्वचा / समग्रं शरीरम्",
+  tokenGeneratedTitle: "टोकन-पत्रं साफल्येन निर्गमितम्!",
+  tokenNumber: "टोकन क्रमाङ्कः",
+  department: "विभागः",
+  roomCounter: "कक्षः तथा गणकपीठम्",
+  estimatedWait: "अनुमानितः समयः",
+  minutes: "निमेषाः",
+  printThermalSlip: "🖨️ पत्रं मुद्रयतु",
+  sendWhatsApp: "📱 व्हाट्सऐप-माध्यमेन प्रेषयतु",
+  createNewToken: "नवीनरोगी पञ्जीकरणम्",
+};
+
+// -------------------------------------------------------------
+// Santali (ᱥᱟᱱᱛᱟᱲᱤ / संताली)
+// -------------------------------------------------------------
+const baseSantali: TranslationDictionary = {
+  ...baseHindi,
+  appTitle: "ᱥᱢᱟᱨᱴ ᱴᱨᱟᱭᱮᱡᱽ ᱟᱨ ᱚᱯᱤᱰᱤ ᱴᱳᱠᱮᱱ ᱠᱤᱭᱳᱥᱠ (Santali)",
+  appSubtitle: "AI ᱛᱮ ᱨᱩᱣᱟᱹ ᱦᱚᱲ ᱧᱩᱛᱩᱢ ᱚᱞ ᱟᱨ ᱞᱟᱭᱤᱱ ᱥᱟᱵ",
+  emergencyFastTrack: "🚨 ᱞᱚᱜᱚᱱ ᱜᱚᱲᱚ",
+  voiceGuide: "ᱟᱲᱟᱝ ᱜᱚᱲᱚ",
+  selectLanguage: "ᱯᱟᱹᱨᱥᱤ",
+  step1Title: "ᱨᱩᱣᱟᱹ ᱦᱚᱲ ᱧᱩᱛᱩᱢ ᱚᱞ",
+  step1Subtitle: "ᱟᱢᱟᱜ ᱠᱟᱛᱷᱟ ᱚᱞ ᱢᱮ ᱥᱮ ᱞᱟᱹᱭ ᱢᱮ᱾",
+  fullName: "ᱯᱩᱨᱟᱹ ᱧᱩᱛᱩᱢ",
+  age: "ᱩᱢᱟᱹᱨ (ᱥᱮᱨᱢᱟ)",
+  gender: "ᱡᱟᱱᱟᱝ",
+  male: "ᱠᱚᱲᱟ",
+  female: "ᱠᱩᱲᱤ",
+  other: "ᱮᱴᱟᱜ",
+  phone: "᱑᱐-ᱮᱞ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ",
+  nextStep: "ᱞᱟᱦᱟ",
+  back: "ᱛᱟᱭᱚᱢ",
+  step2Title: "ᱦᱚᱲᱢᱚ ᱦᱟᱹᱥᱩ ᱢᱮᱯ",
+  step2Subtitle: "ᱦᱟᱹᱥᱩ ᱦᱟᱹᱴᱤᱧ ᱨᱮ ᱡᱚᱴᱮᱫ ᱢᱮ᱾",
+  frontView: "ᱥᱟᱢᱟᱝ ᱧᱮᱞ",
+  backView: "ᱛᱟᱭᱚᱢ ᱧᱮᱞ",
+  selectedZones: "ᱵᱟᱪᱷᱟᱣ ᱦᱟᱹᱴᱤᱧ",
+  clearSelection: "ᱡᱚᱛᱚ ᱜᱤᱰᱤ",
+  continueToSymptoms: "ᱞᱚᱠᱷᱭᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ",
+  regionHeadNeck: "ᱵᱚᱦᱚᱜ ᱟᱨ ᱦᱚᱴᱚᱜ",
+  regionChest: "ᱠᱚᱲᱟᱢ ᱟᱨ ᱯᱟᱹᱧᱡᱚᱨ",
+  regionAbdomen: "ᱞᱟᱡ ᱟᱨ ᱦᱚᱡᱚᱢ",
+  regionSpineBack: "ᱫᱮᱭᱟ ᱟᱨ ᱡᱟᱝ",
+  regionArms: "ᱛᱤ ᱟᱨ ᱛᱟᱨᱮᱱ",
+  regionPelvis: "ᱰᱟᱸᱰᱟ ᱟᱨ ᱯᱮᱞᱵᱷᱤᱥ",
+  regionLegsJoints: "ᱡᱟᱝᱜᱟ, ᱤᱠᱤᱨ ᱟᱨ ᱡᱚᱲ",
+  regionSkinGeneral: "ᱦᱟᱨᱛᱟ / ᱜᱚᱴᱟ ᱦᱚᱲᱢᱚ",
+  tokenGeneratedTitle: "ᱴᱳᱠᱮᱱ ᱥᱟᱹᱛ ᱮᱱᱟ!",
+  tokenNumber: "ᱴᱳᱠᱮᱱ ᱮᱞ",
+  department: "ᱵᱤᱵᱷᱟᱜᱽ",
+  roomCounter: "ᱚᱲᱟᱜ ᱟᱨ ᱠᱟᱣᱩᱱᱴᱟᱨ",
+  estimatedWait: "ᱟᱢᱫᱟᱡᱽ ᱚᱠᱛᱚ",
+  minutes: "ᱴᱤᱲᱤᱡ",
+  printThermalSlip: "🖨️ ᱥᱞᱤᱯ ᱪᱷᱟᱯᱟᱭ ᱢᱮ",
+  sendWhatsApp: "📱 ᱦᱣᱟᱴᱥᱮᱯ ᱨᱮ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",
+  createNewToken: "ᱱᱟᱣᱟ ᱨᱩᱣᱟᱹ ᱦᱚᱲ ᱚᱞ",
+};
+
+// -------------------------------------------------------------
+// Sindhi (سنڌي / सिन्धी)
+// -------------------------------------------------------------
+const baseSindhi: TranslationDictionary = {
+  ...baseUrdu,
+  appTitle: "سمارٽ ٽرائيج ۽ او پي ڊي ٽوڪن ڪيوسڪ (سنڌي)",
+  appSubtitle: "اي آءِ مريض رجسٽريشن ۽ قطار انتظام",
+  emergencyFastTrack: "🚨 هنگامي سروس",
+  voiceGuide: "آواز مددگار",
+  selectLanguage: "ٻولي",
+  step1Title: "مريض جو اندراج ۽ سڃاڻپ",
+  step1Subtitle: "پنهنجا تفصيل داخل ڪريو يا ڳالهايو.",
+  fullName: "پورو نالو",
+  age: "عمر (سال)",
+  gender: "جنس",
+  male: "مرد",
+  female: "عورت",
+  other: "ٻيو",
+  phone: "10 انگن وارو موبائل نمبر",
+  nextStep: "اڳيان",
+  back: "پوئتي",
+  step2Title: "جسماني سور جو نقشو",
+  step2Subtitle: "سور واري حصي کي ڇهو يا چونڊيو.",
+  frontView: "اڳيون ڏيک",
+  backView: "پويون ڏيک",
+  selectedZones: "چونڊيل حصا",
+  clearSelection: "سڀ صاف ڪريو",
+  continueToSymptoms: "علامتن جي تفصيل",
+  regionHeadNeck: "مٿو ۽ ڳچي",
+  regionChest: "ڇاتي ۽ پاسريون",
+  regionAbdomen: "پيٽ ۽ هاضمو",
+  regionSpineBack: "پٺي ۽ ڪرنگھو",
+  regionArms: "هٿ ۽ ڪلها",
+  regionPelvis: "ڪمر ۽ چيلهه",
+  regionLegsJoints: "ٽنگون، گوڏا ۽ سنڌا",
+  regionSkinGeneral: "چمڙي / پورو جسم",
+  tokenGeneratedTitle: "ٽوڪن ڪاميابي سان جاري ڪيو ويو!",
+  tokenNumber: "ٽوڪن نمبر",
+  department: "شعبو",
+  roomCounter: "ڪمرو ۽ ڪائونٽر",
+  estimatedWait: "اندازي وقت",
+  minutes: "منٽ",
+  printThermalSlip: "🖨️ رسيد پرنٽ ڪريو",
+  sendWhatsApp: "📱 واٽس ايپ تي موڪليو",
+  createNewToken: "نئون مريض رجسٽر ڪريو",
+};
+
+
 export const translations: Record<Language, TranslationDictionary> = {
   en: baseEnglish,
+  as: baseAssamese,
+  bn: baseBengali,
+  brx: baseBodo,
+  doi: baseDogri,
+  gu: baseGujarati,
   hi: baseHindi,
-  mr: baseMarathi,
   kn: baseKannada,
+  ks: baseKashmiri,
+  kok: baseKonkani,
+  mai: baseMaithili,
+  ml: baseMalayalam,
+  mni: baseManipuri,
+  mr: baseMarathi,
+  ne: baseNepali,
+  or: baseOdia,
+  pa: basePunjabi,
+  sa: baseSanskrit,
+  sat: baseSantali,
+  sd: baseSindhi,
   ta: baseTamil,
   te: baseTelugu,
-  bn: baseBengali,
-  gu: baseGujarati,
-  pa: basePunjabi,
-  ml: baseMalayalam,
-  or: baseOdia,
-  as: baseAssamese,
   ur: baseUrdu,
 };
+
+export interface LanguageMeta {
+  code: Language;
+  label: string;
+  subLabel: string;
+  ttsLocale: string;
+}
+
+export const ALL_SCHEDULED_LANGUAGES: LanguageMeta[] = [
+  { code: "en", label: "English", subLabel: "English", ttsLocale: "en-IN" },
+  { code: "hi", label: "हिंदी", subLabel: "Hindi", ttsLocale: "hi-IN" },
+  { code: "as", label: "অসমীয়া", subLabel: "Assamese", ttsLocale: "as-IN" },
+  { code: "bn", label: "বাংলা", subLabel: "Bengali", ttsLocale: "bn-IN" },
+  { code: "brx", label: "बड़ो", subLabel: "Bodo", ttsLocale: "brx-IN" },
+  { code: "doi", label: "डोगरी", subLabel: "Dogri", ttsLocale: "doi-IN" },
+  { code: "gu", label: "ગુજરાતી", subLabel: "Gujarati", ttsLocale: "gu-IN" },
+  { code: "kn", label: "ಕನ್ನಡ", subLabel: "Kannada", ttsLocale: "kn-IN" },
+  { code: "ks", label: "कॉशुर / كٲشُر", subLabel: "Kashmiri", ttsLocale: "ks-IN" },
+  { code: "kok", label: "कोंकणी", subLabel: "Konkani", ttsLocale: "kok-IN" },
+  { code: "mai", label: "मैथिली", subLabel: "Maithili", ttsLocale: "mai-IN" },
+  { code: "ml", label: "മലയാളം", subLabel: "Malayalam", ttsLocale: "ml-IN" },
+  { code: "mni", label: "মৈতৈলোন্", subLabel: "Manipuri (Meitei)", ttsLocale: "mni-IN" },
+  { code: "mr", label: "मराठी", subLabel: "Marathi", ttsLocale: "mr-IN" },
+  { code: "ne", label: "नेपाली", subLabel: "Nepali", ttsLocale: "ne-NP" },
+  { code: "or", label: "ଓଡ଼ିଆ", subLabel: "Odia", ttsLocale: "or-IN" },
+  { code: "pa", label: "ਪੰਜਾਬੀ", subLabel: "Punjabi", ttsLocale: "pa-IN" },
+  { code: "sa", label: "संस्कृतम्", subLabel: "Sanskrit", ttsLocale: "sa-IN" },
+  { code: "sat", label: "ᱥᱟᱱᱛᱟᱲᱤ", subLabel: "Santali", ttsLocale: "sat-IN" },
+  { code: "sd", label: "سنڌي / सिन्धी", subLabel: "Sindhi", ttsLocale: "sd-IN" },
+  { code: "ta", label: "தமிழ்", subLabel: "Tamil", ttsLocale: "ta-IN" },
+  { code: "te", label: "తెలుగు", subLabel: "Telugu", ttsLocale: "te-IN" },
+  { code: "ur", label: "اردو", subLabel: "Urdu", ttsLocale: "ur-IN" },
+];
+

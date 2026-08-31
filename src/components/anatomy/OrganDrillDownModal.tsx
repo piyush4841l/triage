@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Check, 
   HelpCircle, 
@@ -50,6 +50,20 @@ export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
   const [duration, setDuration] = useState<"today" | "few_days" | "more_than_week" | "chronic">(
     initialData.duration || "few_days"
   );
+  const hasSpokenRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && voiceGuide && !hasSpokenRef.current) {
+      hasSpokenRef.current = true;
+      speakText(
+        "Do you want to specify any body part? Select the affected organs or sub-areas, or tap Continue to Symptoms.",
+        "en"
+      );
+    }
+    if (!isOpen) {
+      hasSpokenRef.current = false;
+    }
+  }, [isOpen, voiceGuide]);
 
   if (!isOpen) return null;
 

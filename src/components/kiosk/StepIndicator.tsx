@@ -1,178 +1,344 @@
 "use client";
 
 import React from "react";
-import { User, Activity, FileText, CheckCircle2 } from "lucide-react";
-import { Language } from "@/lib/i18n";
+import { 
+  LayoutGrid, 
+  Users, 
+  UploadCloud, 
+  Ticket, 
+  RotateCcw, 
+  CreditCard, 
+  Check, 
+  ListChecks 
+} from "lucide-react";
+import { Language, translations } from "@/lib/i18n";
+import { PatientRegistrationData } from "@/components/registration/PatientRegistration";
 
 interface StepIndicatorProps {
   currentStep: number; // 1 to 4
   lang: Language;
+  registrationData?: PatientRegistrationData;
   onStepClick?: (step: number) => void;
+  onResetKiosk?: () => void;
 }
 
 const STEP_LABELS: Record<Language, { title: string; desc: string }[]> = {
   en: [
-    { title: "1. Registration", desc: "Name & Contact" },
-    { title: "2. Body Pain Map", desc: "Interactive Skeleton" },
-    { title: "3. Past Records", desc: "OCR Report (Optional)" },
-    { title: "4. OPD Token", desc: "Print & WhatsApp" },
+    { title: "Registration", desc: "Patient Details" },
+    { title: "Body Pain Map", desc: "Select Pain Area" },
+    { title: "Upload Prescription", desc: "Past OCR Records" },
+    { title: "OPD Token", desc: "Receipt & Queue" },
   ],
   hi: [
-    { title: "1. पंजीकरण", desc: "नाम व मोबाइल" },
-    { title: "2. दर्द का अंग", desc: "चित्र पर स्पर्श करें" },
-    { title: "3. पुराना पर्चा", desc: "दवाइयां व रिपोर्ट" },
-    { title: "4. ओपीडी टोकन", desc: "रसीद व कतार" },
+    { title: "पंजीकरण", desc: "रोगी विवरण" },
+    { title: "दर्द का अंग", desc: "चित्र पर स्पर्श" },
+    { title: "पर्चा अपलोड", desc: "मेडिकल रिकॉर्ड" },
+    { title: "ओपीडी टोकन", desc: "रसीद व कतार" },
   ],
   mr: [
-    { title: "1. रुग्ण नोंदणी", desc: "नाव व मोबाईल" },
-    { title: "2. वेदना नकाशा", desc: "अवयव निवडा" },
-    { title: "3. मागील अहवाल", desc: "प्रिस्क्रिप्शन अपलोड" },
-    { title: "4. ओपीडी टोकन", desc: "पावती व रांग" },
+    { title: "नोंदणी", desc: "रुग्ण तपशील" },
+    { title: "वेदना नकाशा", desc: "अवयव निवडा" },
+    { title: "प्रिस्क्रिप्शन अपलोड", desc: "वैद्यकीय अहवाल" },
+    { title: "ओपीडी टोकन", desc: "पावती व रांग" },
   ],
   kn: [
-    { title: "1. ರೋಗಿ ನೋಂದಣಿ", desc: "ಹೆಸರು ಮತ್ತು ಮೊಬೈಲ್" },
-    { title: "2. ನೋವಿನ ನಕ್ಷೆ", desc: "ಅಂಗಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ" },
-    { title: "3. ವೈದ್ಯಕೀಯ ವರದಿ", desc: "ವರದಿ ಅಪ್‌ಲೋಡ್" },
-    { title: "4. ಒಪಿಡಿ ಟೋಕನ್", desc: "ರಸೀದಿ ಮತ್ತು ಸಾಲು" },
+    { title: "ನೋಂದಣಿ", desc: "ರೋಗಿಯ ವಿವರಗಳು" },
+    { title: "ನೋವಿನ ನಕ್ಷೆ", desc: "ಅಂಗಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ" },
+    { title: "ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಪ್‌ಲೋಡ್", desc: "ವೈದ್ಯಕೀಯ ವರದಿ" },
+    { title: "ಒಪಿಡಿ ಟೋಕನ್", desc: "ರಸೀದಿ ಮತ್ತು ಸಾಲು" },
   ],
   ta: [
-    { title: "1. நோயாளி பதிவு", desc: "பெயர் & எண்" },
-    { title: "2. வலி வரைபடம்", desc: "பகுதியைத் தொடவும்" },
-    { title: "3. மருத்துவ ஆவணம்", desc: "ஆவண பதிவேற்றம்" },
-    { title: "4. ஓபிடி டோக்கன்", desc: "ரசீது & வரிசை" },
+    { title: "பதிவு", desc: "நோயாளி விவரங்கள்" },
+    { title: "வலி வரைபடம்", desc: "பகுதியைத் தொடவும்" },
+    { title: "மருந்து சீட்டு", desc: "ஆவண பதிவேற்றம்" },
+    { title: "ஓபிடி டோக்கன்", desc: "ரசீது & வரிசை" },
   ],
   te: [
-    { title: "1. రోగి నమోదు", desc: "పేరు & మొబైల్" },
-    { title: "2. నొప్పి పటం", desc: "అవయవాలను ఎంచుకోండి" },
-    { title: "3. మునుపటి నివేదిక", desc: "నివేదిక అప్‌లోడ్" },
-    { title: "4. ఓపీడీ టోకెన్", desc: "రసీదు & క్యూ" },
+    { title: "నమోదు", desc: "రోగి వివరాలు" },
+    { title: "నొప్పి పటం", desc: "అవయవాల ఎంపిక" },
+    { title: "ప్రిస్క్రిప్షన్ అప్‌లోడ్", desc: "వైద్య పత్రాలు" },
+    { title: "ఓపీడీ టోకెన్", desc: "రసీదు & క్యూ" },
   ],
   bn: [
-    { title: "1. রোগী নিবন্ধন", desc: "নাম ও মোবাইল" },
-    { title: "2. ব্যথা মানচিত্র", desc: "অঙ্গ নির্বাচন করুন" },
-    { title: "3. পূর্ববর্তী রিপোর্ট", desc: "প্রেসক্রিপশন আপলোড" },
-    { title: "4. ওপিডি টোকেন", desc: "রসিদ ও লাইন" },
+    { title: "নিবন্ধন", desc: "রোগীর বিবরণ" },
+    { title: "ব্যথা মানচিত্র", desc: "অঙ্গ নির্বাচন" },
+    { title: "প্রেসক্রিপশন আপলোড", desc: "মেডিকেল রিপোর্ট" },
+    { title: "ওপিডি টোকেন", desc: "রসিদ ও লাইন" },
   ],
   gu: [
-    { title: "1. દર્દી નોંધણી", desc: "નામ અને મોબાઈલ" },
-    { title: "2. દર્દ નો નકશો", desc: "અંગ પસંદ કરો" },
-    { title: "3. જૂનો રિપોર્ટ", desc: "પ્રિસ્ક્રિપ્શન અપલોડ" },
-    { title: "4. ઓપીડી ટોકન", desc: "રસીદ અને કતાર" },
+    { title: "નોંધણી", desc: "દર્દી વિગતો" },
+    { title: "દર્દ નો નકશો", desc: "અંગ પસંદગી" },
+    { title: "પ્રિસ્ક્રિપ્શન અપલોડ", desc: "તબીબી અહેવાલ" },
+    { title: "ઓપીડી ટોકન", desc: "રસીદ અને કતાર" },
   ],
   pa: [
-    { title: "1. ਮਰੀਜ਼ ਰਜਿਸਟ੍ਰੇਸ਼ਨ", desc: "ਨਾਮ ਅਤੇ ਮੋਬਾਈਲ" },
-    { title: "2. ਦਰਦ ਦਾ ਨਕਸ਼ਾ", desc: "ਅੰਗ ਚੁਣੋ" },
-    { title: "3. ਪੁਰਾਣੀ ਰਿਪੋਰਟ", desc: "ਪਰਚਾ ਅੱਪਲੋਡ" },
-    { title: "4. ਓਪੀਡੀ ਟੋਕਨ", desc: "ਰਸੀਦ ਅਤੇ ਲਾਈਨ" },
+    { title: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ", desc: "ਮਰੀਜ਼ ਵੇਰਵੇ" },
+    { title: "ਦਰਦ ਦਾ ਨਕਸ਼ਾ", desc: "ਅੰਗ ਚੋਣ" },
+    { title: "ਪਰਚਾ ਅੱਪਲੋਡ", desc: "ਮੈਡੀਕਲ ਰਿਪੋਰਟ" },
+    { title: "ਓਪੀਡੀ ਟੋਕਨ", desc: "ਰਸੀਦ ਅਤੇ ਲਾਈਨ" },
   ],
   ml: [
-    { title: "1. രോഗി രജിസ്ട്രേഷൻ", desc: "പേരും മൊബൈലും" },
-    { title: "2. വേദന മാപ്പ്", desc: "ഭാഗം തിരഞ്ഞെടുക്കുക" },
-    { title: "3. മുൻ റിപ്പോർട്ടുകൾ", desc: "റിപ്പോർട്ട് അപ്‌ലോഡ്" },
-    { title: "4. ഒപിഡി ടോക്കൺ", desc: "രസീതും ക്യൂവും" },
+    { title: "രജിസ്ട്രേഷൻ", desc: "രോഗിയുടെ വിവരങ്ങൾ" },
+    { title: "വേദന മാപ്പ്", desc: "ഭാഗം തിരഞ്ഞെടുക്കുക" },
+    { title: "കുറിപ്പടി അപ്‌ലോഡ്", desc: "മെഡിക്കൽ രേഖകൾ" },
+    { title: "ഒപിഡി ടോക്കൺ", desc: "രസീതും ക്യൂവും" },
   ],
   or: [
-    { title: "1. ରୋଗୀ ପଞ୍ଜୀକରଣ", desc: "ନାମ ଓ ମୋବାଇଲ୍" },
-    { title: "2. ଯନ୍ତ୍ରଣା ମାନଚିତ୍ର", desc: "ଅଙ୍ଗ ଚୟନ କରନ୍ତୁ" },
-    { title: "3. ପୂର୍ବ ରିପୋର୍ଟ", desc: "ପ୍ରେସକ୍ରିପସନ୍ ଅପଲୋଡ୍" },
-    { title: "4. ଓପିଡି ଟୋକନ୍", desc: "ରସିଦ୍ ଓ ଧାଡ଼ି" },
+    { title: "ପଞ୍ଜୀକରଣ", desc: "ରୋଗୀ ବିବରଣୀ" },
+    { title: "ଯନ୍ତ୍ରଣା ମାନଚିତ୍ର", desc: "ଅଙ୍ଗ ଚୟନ" },
+    { title: "ପ୍ରେସକ୍ରିପସନ୍ ଅପଲୋଡ୍", desc: "ଡାକ୍ତରୀ ରିପୋର୍ଟ" },
+    { title: "ଓପିଡି ଟୋକନ୍", desc: "ରସିଦ୍ ଓ ଧାଡ଼ି" },
   ],
   as: [
-    { title: "1. ৰোগী পঞ্জীয়ন", desc: "নাম আৰু মোবাইল" },
-    { title: "2. বিষৰ মানচিত্ৰ", desc: "অংশ বাছক" },
-    { title: "3. পুৰণি ৰিপোৰ্ট", desc: "প্ৰেছক্ৰিপশ্বন আপলোড" },
-    { title: "4. অ'পিডি টোকেন", desc: "ৰচিদ আৰু শাৰী" },
+    { title: "পঞ্জীয়ন", desc: "ৰোগীৰ তথ্য" },
+    { title: "বিষৰ মানচিত্ৰ", desc: "অংশ বাছক" },
+    { title: "প্ৰেছক্ৰিপশ্বন আপলোড", desc: "চিকিৎসা ৰিপোৰ্ট" },
+    { title: "অ'পিডি টোকেন", desc: "ৰচিদ আৰু শাৰী" },
   ],
   ur: [
-    { title: "1. مریض کا اندراج", desc: "نام اور موبائل" },
-    { title: "2. درد کا نقشہ", desc: "عضو منتخب کریں" },
-    { title: "3. پرانی رپورٹ", desc: "نسخہ اپ لوڈ" },
-    { title: "4. او پی ڈی ٹوکن", desc: "رسید اور قطار" },
+    { title: "اندراج", desc: "مریض کی تفصیلات" },
+    { title: "درد کا نقشہ", desc: "عضو کا انتخاب" },
+    { title: "نسخہ اپ لوڈ", desc: "طبی ریکارڈ" },
+    { title: "او پی ڈی ٹوکن", desc: "رسید اور قطار" },
+  ],
+  brx: [
+    { title: "मुं थिसननाय", desc: "मरीज खौरां" },
+    { title: "सानाय मेप", desc: "बाहागो सायख" },
+    { title: "फारिलाइ आपलोड", desc: "राफोर्त" },
+    { title: "ओपिडि टोकन", desc: "रसीद आरो लारि" },
+  ],
+  doi: [
+    { title: "पंजीकरण", desc: "मरीज विवरण" },
+    { title: "दर्द दा नक्शा", desc: "अंग चुनो" },
+    { title: "पर्चा अपलोड", desc: "मेडिकल रिपोर्ट" },
+    { title: "ओपीडी टोकन", desc: "पर्ची ते कतार" },
+  ],
+  ks: [
+    { title: "اندراج", desc: "مریض سند تفصیل" },
+    { title: "دگک نقشہٕ", desc: "حصہٕ ژاریو" },
+    { title: "نسخہٕ اپ لوڈ", desc: "طبی ریکارڈ" },
+    { title: "او پی ڈی ٹوکن", desc: "پرچی تہٕ قطار" },
+  ],
+  kok: [
+    { title: "नोंदणी", desc: "दुयेंती तपशील" },
+    { title: "दूख नकासो", desc: "भाग वेचात" },
+    { title: "प्रिस्क्रिप्शन अपलोड", desc: "वैद्यकीय अहवाल" },
+    { title: "ओपीडी टोकन", desc: "पावती आनी रांक" },
+  ],
+  mai: [
+    { title: "पंजीकरण", desc: "रोगी विवरण" },
+    { title: "दर्दक नक्शा", desc: "अंग चुनू" },
+    { title: "पुर्जा अपलोड", desc: "मेडिकल रिपोर्ट" },
+    { title: "ओपीडी टोकन", desc: "रसीद आ पाँती" },
+  ],
+  mni: [
+    { title: "রেজিষ্ট্রেশন", desc: "অনাবা মীওইগী মরোল" },
+    { title: "নানথিবা মেপ", desc: "মফম খল্লু" },
+    { title: "প্রেসক্রিপশন অপলোড", desc: "মেডিকেল রিপোর্ট" },
+    { title: "ওপিডি টোকেন", desc: "রসিদ অমসুং লাইরিং" },
+  ],
+  ne: [
+    { title: "दर्ता", desc: "बिरामी विवरण" },
+    { title: "दुखाइ नक्सा", desc: "भाग रोज्नुहोस्" },
+    { title: "पुर्जा अपलोड", desc: "मेडिकल रिपोर्ट" },
+    { title: "ओपीडी टोकन", desc: "रसिद र पालो" },
+  ],
+  sa: [
+    { title: "पञ्जीकरणम्", desc: "रोगी विवरणम्" },
+    { title: "वेदना मानचित्रम्", desc: "भागं चिनुत" },
+    { title: "पत्रम् आरोपयतु", desc: "चिकित्सा प्रतिवेदनम्" },
+    { title: "ओपीडी टोकन", desc: "पत्रं तथा क्रमः" },
+  ],
+  sat: [
+    { title: "ᱧᱩᱛᱩᱢ ᱚᱞ", desc: "ᱨᱩᱣᱟᱹ ᱦᱚᱲ ᱠᱟᱛᱷᱟ" },
+    { title: "ᱦᱟᱹᱥᱩ ᱢᱮᱯ", desc: "ᱦᱟᱹᱴᱤᱧ ᱵᱟᱪᱷᱟᱣ" },
+    { title: "ᱥᱞᱤᱯ ᱟᱯᱞᱳᱰ", desc: "ᱨᱟᱱ ᱠᱟᱜᱚᱡᱽ" },
+    { title: "ᱚᱯᱤᱰᱤ ᱴᱳᱠᱮᱱ", desc: "ᱥᱞᱤᱯ ᱟᱨ ᱞᱟᱭᱤᱱ" },
+  ],
+  sd: [
+    { title: "رجسٽريشن", desc: "مريض تفصيل" },
+    { title: "سور جو نقشو", desc: "عضو چونڊيو" },
+    { title: "نسخو اپ لوڊ", desc: "طبي رپورٽ" },
+    { title: "او پي ڊي ٽوڪن", desc: "رسيد ۽ قطار" },
   ],
 };
 
-const STEP_ICONS = [User, Activity, FileText, CheckCircle2];
+const STEP_ICONS = [
+  LayoutGrid,
+  Users,
+  UploadCloud,
+  Ticket,
+];
+
+function maskAbhaId(raw?: string): string {
+  if (!raw || !raw.trim()) return "XXXX-XXXX-XXXX-XXXX";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length >= 4) {
+    const last4 = digits.slice(-4);
+    return `XXXX-XXXX-XX-${last4}`;
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length > 4) {
+    return `XXXX-XXXX-XXXX-${trimmed.slice(-4)}`;
+  }
+  return `XXXX-XXXX-XXXX-${trimmed}`;
+}
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({
   currentStep,
   lang,
+  registrationData,
   onStepClick,
+  onResetKiosk,
 }) => {
   const currentLangSteps = STEP_LABELS[lang] || STEP_LABELS.en;
+
+  const isDetailsFilled = currentStep > 1 && Boolean(registrationData?.patientName?.trim());
+  const displayName = (isDetailsFilled && registrationData?.patientName) ? registrationData.patientName : "Empty";
+  const displayAbha = isDetailsFilled 
+    ? maskAbhaId(registrationData?.abhaId)
+    : "Empty";
 
   const steps = [1, 2, 3, 4].map((num, i) => ({
     num,
     title: currentLangSteps[i]?.title || STEP_LABELS.en[i].title,
     desc: currentLangSteps[i]?.desc || STEP_LABELS.en[i].desc,
-    icon: STEP_ICONS[i],
+    Icon: STEP_ICONS[i],
   }));
 
   return (
-    <div className="w-full sm:w-64 flex flex-col pt-2 sm:pt-8 pr-0 sm:pr-8 mb-6 sm:mb-0">
-      <div className="relative flex flex-row sm:flex-col justify-between h-auto sm:h-[450px] w-full">
-        
-        {/* Mobile Horizontal Connecting Line */}
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-1.5 bg-slate-200 dark:bg-slate-800/90 rounded-full -z-0 sm:hidden">
-          <div
-            className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-sm shadow-emerald-500/20 h-full"
-            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-          />
+    <div className="h-full flex flex-col justify-between gap-5 py-1">
+      
+      <div className="space-y-4">
+        {/* ── 1. Patient Details Card ── */}
+        <div className="bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 transition-all duration-300 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              Patient Profile
+            </span>
+            {isDetailsFilled && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                Verified
+              </span>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Name:</span>
+              <span className={`text-sm font-bold truncate max-w-[150px] ${
+                isDetailsFilled ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 italic font-medium"
+              }`}>
+                {displayName}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-2 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                ABHA:
+              </span>
+              <span className={`text-xs font-mono font-bold tracking-wider ${
+                isDetailsFilled ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 italic font-normal"
+              }`}>
+                {displayAbha}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Desktop Vertical Connecting Line */}
-        <div className="absolute top-0 left-6 -translate-x-1/2 w-1.5 h-full bg-slate-200 dark:bg-slate-800/90 rounded-full -z-0 hidden sm:block">
-          <div
-            className="bg-gradient-to-b from-emerald-600 via-teal-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-sm shadow-emerald-500/20 w-full"
-            style={{ height: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-          />
-        </div>
+        {/* ── 2. Activity Status Card (No large empty void) ── */}
+        <div className="bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-sm space-y-3">
+          {/* Box Header */}
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-700/80">
+            <ListChecks className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Activity Status
+            </span>
+          </div>
 
-        {steps.map((s) => {
-          const Icon = s.icon;
-          const isCompleted = currentStep > s.num;
-          const isCurrent = currentStep === s.num;
+          {/* Steps Navigation Menu */}
+          <nav aria-label="Kiosk Steps" className="space-y-2">
+            {steps.map((s) => {
+              const isCompleted = currentStep > s.num;
+              const isCurrent = currentStep === s.num;
+              const Icon = s.Icon;
 
-          return (
-            <button
-              key={s.num}
-              onClick={() => isCompleted && onStepClick && onStepClick(s.num)}
-              disabled={!isCompleted}
-              className={`relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 group transition-transform ${
-                isCompleted ? "cursor-pointer hover:scale-105" : "cursor-default"
-              }`}
-            >
-              <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 shadow-md shrink-0 ${
-                  isCurrent
-                    ? "bg-gradient-to-br from-emerald-600 to-teal-500 border-emerald-300 text-white ring-4 ring-emerald-500/25 dark:ring-emerald-500/30 scale-110 shadow-lg shadow-emerald-600/30"
-                    : isCompleted
-                    ? "bg-emerald-600 border-emerald-500 text-white shadow-emerald-600/20"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-              </div>
-
-              <div className="mt-1 sm:mt-0 text-center sm:text-left flex-1 hidden sm:block">
-                <span
-                  className={`text-sm font-black block tracking-tight ${
+              return (
+                <button
+                  key={s.num}
+                  onClick={() => isCompleted && onStepClick && onStepClick(s.num)}
+                  disabled={!isCompleted}
+                  className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
                     isCurrent
-                      ? "text-emerald-700 dark:text-emerald-400"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-emerald-400/40 scale-[1.01]"
                       : isCompleted
-                      ? "text-teal-700 dark:text-teal-400"
-                      : "text-slate-500 dark:text-slate-400"
+                      ? "bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50 hover:bg-emerald-100/80 dark:hover:bg-emerald-950/60 cursor-pointer"
+                      : "bg-white/60 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-800/60 cursor-default opacity-75"
                   }`}
                 >
-                  {s.title}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">
-                  {s.desc}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+                  {/* Icon */}
+                  <div className="flex-shrink-0">
+                    <Icon className={`w-4 h-4 ${
+                      isCurrent 
+                        ? "text-white" 
+                        : isCompleted 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-slate-400 dark:text-slate-500"
+                    }`} />
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-bold block truncate ${
+                      isCurrent ? "text-white" : isCompleted ? "text-emerald-900 dark:text-emerald-200" : "text-slate-700 dark:text-slate-300"
+                    }`}>
+                      {s.title}
+                    </span>
+                    <span className={`text-[9px] block truncate ${
+                      isCurrent ? "text-emerald-100" : "text-slate-400 dark:text-slate-500"
+                    }`}>
+                      {s.desc}
+                    </span>
+                  </div>
+
+                  {/* Completed Check Badge */}
+                  {isCompleted && (
+                    <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </div>
+
+      {/* ── 3. Bottom Subtle Action Button ── */}
+      {onResetKiosk && (
+        <div className="pt-2">
+          {currentStep === 4 ? (
+            <button
+              type="button"
+              onClick={onResetKiosk}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/50 shadow-sm hover:shadow-md transition-all text-xs font-bold active:scale-95 group"
+            >
+              <RotateCcw className="w-3.5 h-3.5 group-hover:-rotate-90 transition-transform duration-300 text-red-500" />
+              <span>{translations[lang]?.createNewToken || (lang === "hi" ? "नया मरीज पंजीकृत करें" : "Register New Patient")}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onResetKiosk}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/50 shadow-sm hover:shadow-md transition-all text-xs font-bold active:scale-95 group"
+            >
+              <RotateCcw className="w-3.5 h-3.5 group-hover:-rotate-90 transition-transform duration-300 text-red-500" />
+              <span>Cancel / Reset to Home</span>
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
 };

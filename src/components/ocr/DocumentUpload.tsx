@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   UploadCloud, 
   CheckCircle2, 
@@ -20,8 +20,14 @@ import {
   Plus,
   Files,
   Image as ImageIcon,
-  FileText
+  FileText,
+  QrCode,
+  Camera,
+  FolderOpen,
+  Smartphone,
+  X
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Language, translations } from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
@@ -70,6 +76,104 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [scanStepText, setScanStepText] = useState("");
   const [extractedData, setExtractedData] = useState<OcrExtractedData | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  const [uploadMode, setUploadMode] = useState<"choice" | "qr">("choice");
+  const [showOfflineReports, setShowOfflineReports] = useState(false);
+
+  // Upload modal states
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [sessionId] = useState(() => "kiosk-" + Math.random().toString(36).substring(2, 9));
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Stop camera stream on unmount or modal close
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  // Open device camera stream
+  const handleStartCamera = async () => {
+    setShowCameraModal(true);
+    setCameraError(null);
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
+        });
+        setCameraStream(stream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } else {
+        setCameraError("Camera not accessible on this device. Use file capture instead.");
+      }
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setCameraError("Unable to access camera directly. Please use the camera file picker.");
+    }
+  };
+
+  const handleCloseCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setShowCameraModal(false);
+  };
+
+  // Capture snapshot from video stream
+  const handleCaptureSnapshot = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        const newDoc: UploadedFileItem = {
+          id: "photo-" + Date.now(),
+          name: `Camera_Capture_${Date.now().toString().slice(-4)}.jpg`,
+          size: "1.2 MB",
+          type: "image",
+          previewUrl: dataUrl,
+          preset: "custom",
+        };
+
+        setFiles((prev) => [...prev, newDoc]);
+        setActivePreviewIndex(files.length);
+        setExtractedData(null);
+        handleCloseCamera();
+      }
+    }
+  };
+
+  // Simulate instant mobile QR upload
+  const handleSimulateMobileUpload = () => {
+    const newDoc: UploadedFileItem = {
+      id: "mobile-" + Date.now(),
+      name: "Mobile_Scanned_Prescription.jpg",
+      size: "2.1 MB",
+      type: "image",
+      preset: "cardio",
+    };
+    setFiles((prev) => [...prev, newDoc]);
+    setActivePreviewIndex(files.length);
+    setExtractedData(null);
+    setShowQrModal(false);
+  };
 
   // Load sample demo documents
   const handleAddDemo = (preset: "cardio" | "gastro") => {
@@ -198,45 +302,35 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setScanProgress(100);
 
       // Consolidate findings based on uploaded files
-      const hasCardio = files.some((f) => f.preset === "cardio");
-      const hasGastro = files.some((f) => f.preset === "gastro");
+      const hasCardio = files.some(f => f.preset === "cardio" || f.name.toLowerCase().includes("cardio") || f.name.toLowerCase().includes("heart"));
+      const hasGastro = files.some(f => f.preset === "gastro" || f.name.toLowerCase().includes("gastro") || f.name.toLowerCase().includes("lab"));
 
-      let diagnoses = ["Hypertension (Grade 1)", "Suspected Angina Pectoris", "Sinus Tachycardia (HR: 104 bpm)"];
-      let medications = ["Tab. Telmisartan 40mg (OD)", "Tab. Sorbitrate 5mg (SOS)", "Tab. Ecosprin 75mg"];
-      let allergies = ["Penicillin Sensitivity Reported"];
+      const consolidatedDiagnoses: string[] = [];
+      const consolidatedMeds: string[] = [];
+      const consolidatedAllergies: string[] = [];
 
-      if (hasGastro && hasCardio) {
-        diagnoses = [
-          "Hypertension (Grade 1)",
-          "Angina Pectoris (Stable)",
-          "Gastroesophageal Reflux (GERD)",
-          "Fatty Liver Grade 1"
-        ];
-        medications = [
-          "Tab. Telmisartan 40mg (OD)",
-          "Cap. Pantoprazole 40mg + Domperidone (BD)",
-          "Tab. Sorbitrate 5mg (SOS)",
-          "Syrup Sucralfate 10ml (TDS)"
-        ];
-        allergies = ["Penicillin Sensitivity Reported", "Sulfa Drugs Caution"];
-      } else if (hasGastro) {
-        diagnoses = ["Gastroesophageal Reflux Disease (GERD)", "Erosive Antral Gastritis", "Fatty Liver Grade 1"];
-        medications = ["Cap. Pantoprazole 40mg + Domperidone (BD)", "Syrup Sucralfate 10ml (TDS)"];
-        allergies = ["No Known Drug Allergies (NKDA)"];
+      if (hasCardio) {
+        consolidatedDiagnoses.push("Primary Hypertension (Grade 2)", "Ischemic Heart Disease (Mild Angina)");
+        consolidatedMeds.push("Tab. Telmisartan 40mg (OD)", "Tab. Metoprolol 25mg (OD)", "Tab. Ecosprin 75mg (Post Lunch)");
+        consolidatedAllergies.push("Sulfa Drugs / Sulfonamides (Mild rash)");
       }
 
-      const fileNamesCombined = files.map((f) => f.name).join(", ");
-      const totalSizeMb = files.reduce((acc, f) => acc + parseFloat(f.size) || 1.5, 0).toFixed(1) + " MB";
+      if (hasGastro || (!hasCardio && !hasGastro)) {
+        consolidatedDiagnoses.push("Acute Acid Peptic Disease (GERD)", "Chronic Gastritis Panel (Elevated SGPT 58 IU/L)");
+        consolidatedMeds.push("Cap. Pantoprazole 40mg (Empty Stomach)", "Syrup Sucralfate 10ml (TDS)");
+        consolidatedAllergies.push("NSAIDs / Ibuprofen (Gastric irritation)");
+      }
 
       const data: OcrExtractedData = {
-        fileName: fileNamesCombined,
-        fileSize: totalSizeMb,
+        fileName: files.length === 1 ? files[0].name : `${files.length} Consolidated Medical Records`,
+        fileSize: files.reduce((acc, f) => acc + (f.size.includes("MB") ? parseFloat(f.size) : parseFloat(f.size) / 1024), 0).toFixed(1) + " MB",
+        confidence: "98.4%",
         totalDocuments: files.length,
-        confidence: "99.4%",
-        diagnoses,
-        medications,
-        allergies,
-        rawText: `Multi-Document OCR Summary: Extracted from ${files.length} records. Verified against ABDM Clinical Triage database.`,
+        diagnoses: consolidatedDiagnoses,
+        medications: consolidatedMeds,
+        allergies: consolidatedAllergies,
+        rawText: `[MULTI-PAGE CLINICAL OCR PARSE - ${files.length} ATTACHMENT(S)]\n` +
+          files.map((f, i) => `PAGE ${i+1} (${f.name}):\nRx & Notes ingested: Diagnoses recorded: ${consolidatedDiagnoses.join(", ")}. Meds: ${consolidatedMeds.join(", ")}. Allergies: ${consolidatedAllergies.join(", ")}`).join("\n---\n")
       };
 
       setExtractedData(data);
@@ -252,61 +346,114 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const currentFile = files[activePreviewIndex] || files[0];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-3">
       
-      {/* 1. Main Upload Dropzone (When No Files Selected) */}
+      {/* Hidden File Inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,application/pdf"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
+      {/* 1. Main Upload Screen (When No Files Selected) */}
       {files.length === 0 ? (
-        <div 
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={handleDrop}
-          className={`bg-white/95 dark:bg-slate-900/85 border-2 border-dashed rounded-3xl p-10 sm:p-14 text-center transition-all relative group shadow-xl ${
-            isDragOver
-              ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 scale-[1.01] ring-4 ring-emerald-500/20"
-              : "border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-400"
-          }`}
-        >
-          <input
-            type="file"
-            multiple
-            accept="image/*,application/pdf"
-            onChange={handleFileUpload}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            aria-label="Upload multiple prescriptions or lab reports"
-          />
+        uploadMode === "choice" ? (
+          /* Step A: Option Selection Card (Only Scan QR inside the box) */
+          <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 text-center space-y-4 shadow-sm max-w-md mx-auto my-auto animate-in fade-in duration-300 text-slate-900 dark:text-white">
+            
+            {/* Header */}
+            <div>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {lang === "hi" ? "दस्तावेज़ और पुराने पर्चे" : "Upload Documents & Records"}
+              </h3>
+            </div>
 
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-emerald-50 dark:bg-emerald-600/10 border-2 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-600/20 transition-all shadow-md">
-            <UploadCloud className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
-          </div>
-
-          <h4 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-4 tracking-tight">
-            {t.dragDropText || "Drag & Drop Prescriptions or Medical Reports"}
-          </h4>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium max-w-lg mx-auto">
-            Upload multiple pages, prescriptions, or lab test reports • Supports <span className="font-bold text-slate-800 dark:text-slate-200">PDF, JPG, PNG, DICOM</span>
-          </p>
-
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 relative z-20">
-            <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 flex items-center mr-1">
-              <Cpu className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" />
-              ⚡ Try AI Demo:
-            </span>
+            {/* Single Focused Action Card: Scan QR via Phone */}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); handleAddDemo("cardio"); }}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/70 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-emerald-800 dark:text-emerald-200 transition-all shadow-sm flex items-center space-x-1"
+              onClick={() => setUploadMode("qr")}
+              className="w-full p-5 rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/30 hover:border-emerald-500 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/60 text-left transition-all group flex flex-col justify-between space-y-3 shadow-sm hover:shadow-md active:scale-[0.99]"
             >
-              <span>🫀 Cardio Prescription</span>
+              <div className="flex items-center justify-between w-full">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <QrCode className="w-6 h-6 text-emerald-700 dark:text-emerald-300" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wide">
+                  {lang === "hi" ? "स्मार्टफ़ोन" : "Scan via Phone"}
+                </span>
+              </div>
+              <div>
+                <h4 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">
+                  {lang === "hi" ? "फ़ोन से QR स्कैन करें" : "Scan QR via Phone"}
+                </h4>
+              </div>
+              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 pt-1">
+                <span>{lang === "hi" ? "QR कोड देखें →" : "Show QR Code →"}</span>
+              </div>
             </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); handleAddDemo("gastro"); }}
-              className="px-3.5 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/70 hover:bg-teal-100 dark:hover:bg-teal-900/70 border border-teal-300 dark:border-teal-700 text-xs font-bold text-teal-800 dark:text-teal-200 transition-all shadow-sm flex items-center space-x-1"
-            >
-              <span>🧪 Gastro Lab Report</span>
-            </button>
+
           </div>
-        </div>
+        ) : (
+          /* Step B: QR Code Scanner Screen */
+          <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 text-center space-y-4 shadow-sm max-w-lg mx-auto my-auto animate-in fade-in duration-300 text-slate-900 dark:text-white">
+            
+            {/* Header */}
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs border border-emerald-200 dark:border-emerald-800 mb-1">
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{lang === "hi" ? "स्मार्टफ़ोन कैमरा स्कैन" : "Scan with Mobile Camera"}</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {lang === "hi" ? "फ़ोन से पर्चा / रिपोर्ट अपलोड करें" : "Scan QR to Upload Prescription"}
+              </h3>
+            </div>
+
+            {/* Centered High-Res QR Code */}
+            <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/30 inline-block shadow-sm">
+              <QRCodeSVG
+                value={`https://triage-hospital.abdm.gov.in/upload?session=${sessionId}`}
+                size={190}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+
+            {/* Live Status Indicator */}
+            <div className="flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold animate-pulse pt-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>{lang === "hi" ? "मोबाइल से फ़ोटो का इंतज़ार..." : "Waiting for phone scan & photo..."}</span>
+            </div>
+
+            {/* Offline Physical Report Checkbox Option */}
+            <div className="pt-2">
+              <label className="flex items-center justify-start gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none text-left">
+                <input
+                  type="checkbox"
+                  checked={showOfflineReports}
+                  onChange={(e) => setShowOfflineReports(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 flex-shrink-0"
+                />
+                <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {lang === "hi"
+                    ? "अन्य रिपोर्ट डॉक्टर को ऑफ़लाइन दिखाएंगे"
+                    : "Will show other reports offline"}
+                </span>
+              </label>
+            </div>
+
+          </div>
+        )
       ) : (
 
         /* 2. Multi-Document Gallery Preview & Submit Column */
@@ -615,38 +762,176 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* Clean Bottom Navigation Bar */}
       <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
         
-        {/* Secondary Back Button */}
-        {onBack && (
+        {/* Contextual Back Button */}
+        {uploadMode === "qr" && files.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => setUploadMode("choice")}
+            className="w-full sm:w-auto py-3 px-6 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold text-xs sm:text-sm border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-2 shadow-sm active:scale-[0.99]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>{lang === "hi" ? "वापस" : "Back"}</span>
+          </button>
+        ) : onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="w-full sm:w-auto py-4 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold text-base border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-2 shadow-sm"
+            className="w-full sm:w-auto py-3 px-6 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold text-xs sm:text-sm border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-2 shadow-sm active:scale-[0.99]"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span>← Back to Body Pain Map</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>{lang === "hi" ? "वापस" : "Back"}</span>
           </button>
-        )}
+        ) : null}
 
-        {/* Primary Proceed / Skip Button */}
+        {/* Primary Proceed / Continue Button */}
         <button
           type="button"
           onClick={() => onProceed(extractedData || undefined)}
-          className={`w-full ${onBack ? "sm:w-auto sm:min-w-[280px]" : "sm:w-full"} py-4 px-8 rounded-2xl font-black text-base sm:text-lg transition-all flex items-center justify-center space-x-3 shadow-lg active:scale-[0.98] ${
-            extractedData
-              ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-600/30 ring-2 ring-emerald-500/20"
-              : "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-600/30"
-          }`}
+          className="w-full sm:w-auto sm:min-w-[240px] py-3 px-6 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 shadow-md active:scale-[0.99] bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-600/25"
         >
           <span>
             {extractedData
-              ? (t.proceedToToken || "Confirm & Generate AI Token →")
-              : (t.skipStep || "Skip & Generate Token →")
+              ? (t.proceedToToken || "Confirm & Generate Token")
+              : (lang === "hi" ? "बिना रिपोर्ट अपलोड किए आगे बढ़ें" : "Continue without uploading reports")
             }
           </span>
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className="w-4 h-4" />
         </button>
 
       </div>
+
+      {/* 📱 Mobile QR Upload Modal */}
+      {showQrModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 relative">
+            
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowQrModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
+              <Smartphone className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                {lang === "hi" ? "फ़ोन से QR स्कैन करें" : "Scan to Upload via Phone"}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {lang === "hi" ? "अपने स्मार्टफोन के कैमरे से इस QR कोड को स्कैन करें" : "Point your phone camera at this QR code to photograph your prescription"}
+              </p>
+            </div>
+
+            {/* QR Code Canvas */}
+            <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/30 inline-block shadow-inner">
+              <QRCodeSVG
+                value={`https://triage-hospital.abdm.gov.in/upload?session=${sessionId}`}
+                size={180}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+
+            {/* Listening Badge */}
+            <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>{lang === "hi" ? "मोबाइल अपलोड की प्रतीक्षा है..." : "Waiting for mobile upload..."}</span>
+            </div>
+
+            {/* Quick Test Simulator Button */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleSimulateMobileUpload}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5"
+              >
+                <span>⚡ {lang === "hi" ? "टेस्ट: मोबाइल फ़ोटो प्राप्त हुई" : "Simulate / Test Mobile Upload"}</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 📸 Live Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-md w-full shadow-2xl text-center space-y-3.5 relative">
+            
+            {/* Header & Close */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-left">
+                <Camera className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  {lang === "hi" ? "दस्तावेज़ की फोटो लें" : "Camera Document Capture"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseCamera}
+                className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Video Viewfinder Box */}
+            <div className="relative w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden border-2 border-teal-500/40 flex items-center justify-center shadow-inner">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+
+              {/* Viewfinder Target Guidelines */}
+              <div className="absolute inset-4 border-2 border-dashed border-white/60 rounded-xl pointer-events-none flex items-center justify-center">
+                <span className="text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded-md font-mono">
+                  {lang === "hi" ? "पर्चे को यहाँ रखें" : "Align prescription here"}
+                </span>
+              </div>
+
+              {cameraError && (
+                <div className="absolute inset-0 bg-slate-900/90 p-4 flex flex-col items-center justify-center text-center space-y-2">
+                  <p className="text-xs text-rose-400 font-semibold">{cameraError}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCloseCamera();
+                      cameraInputRef.current?.click();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-teal-600 text-white font-bold text-xs"
+                  >
+                    Open Device Camera Picker
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Shutter Capture Button */}
+            {!cameraError && (
+              <div className="flex items-center justify-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCaptureSnapshot}
+                  className="py-3 px-6 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-sm shadow-lg shadow-teal-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{lang === "hi" ? "फ़ोटो खींचें (Snap Photo)" : "Capture Photo"}</span>
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

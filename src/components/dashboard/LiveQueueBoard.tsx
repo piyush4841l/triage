@@ -6,12 +6,14 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
+  AlertOctagon,
   Volume2, 
   Stethoscope, 
   FileText, 
   Filter, 
   Activity, 
-  MapPin
+  MapPin,
+  LogOut
 } from "lucide-react";
 import { StoredToken, getStoredTokens, updateTokenStatus } from "@/lib/store";
 import { Language, translations } from "@/lib/i18n";
@@ -20,12 +22,19 @@ import { speakText } from "@/lib/speech";
 interface LiveQueueBoardProps {
   lang: Language;
   voiceGuide: boolean;
+  doctorName?: string;
+  onLogout?: () => void;
 }
 
-export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ lang, voiceGuide }) => {
+export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ 
+  lang, 
+  voiceGuide,
+  doctorName,
+  onLogout
+}) => {
   const t = translations[lang];
   const [tokens, setTokens] = useState<StoredToken[]>([]);
-  const [selectedDept, setSelectedDept] = useState<string>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<"EMERGENCY" | "OPD">("EMERGENCY");
   const [selectedTokenForOcr, setSelectedTokenForOcr] = useState<StoredToken | null>(null);
   const [callingTokenId, setCallingTokenId] = useState<string | null>(null);
 
@@ -76,120 +85,105 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ lang, voiceGuide
     refreshTokens();
   };
 
-  const departments = [
-    "ALL",
-    "Emergency & Trauma",
-    "Cardiology",
-    "Pulmonology",
-    "Gastroenterology",
-    "Orthopedics",
-    "Neurology",
-    "ENT",
-    "General Medicine",
-  ];
+  const handleFinishAndCallNext = (currentToken: StoredToken) => {
+    updateTokenStatus(currentToken.id, "COMPLETED");
+    refreshTokens();
+
+    const currentTokensList = getStoredTokens();
+    const remainingTokens = currentTokensList.filter(
+      (t) =>
+        t.id !== currentToken.id &&
+        t.status !== "COMPLETED" &&
+        (categoryFilter === "EMERGENCY" ? isEmergencyToken(t) : !isEmergencyToken(t))
+    );
+
+    if (remainingTokens.length > 0) {
+      handleCallPatient(remainingTokens[0]);
+    }
+  };
+
+  const isEmergencyToken = (t: StoredToken) =>
+    t.result.department === "Emergency & Trauma" ||
+    Boolean(t.input?.isEmergencyOverride);
+
+  const totalEmergencyCount = tokens.filter((t) => isEmergencyToken(t) && t.status !== "COMPLETED").length;
+  const totalOpdCount = tokens.filter((t) => !isEmergencyToken(t) && t.status !== "COMPLETED").length;
 
   const filteredTokens = tokens.filter((t) => {
     if (t.status === "COMPLETED") return false;
-    if (selectedDept === "ALL") return true;
-    return t.result.department === selectedDept;
+    if (categoryFilter === "EMERGENCY") return isEmergencyToken(t);
+    if (categoryFilter === "OPD") return !isEmergencyToken(t);
+    return true;
   });
 
-  const waitingCount = tokens.filter((t) => t.status === "WAITING" || t.status === "CALLED").length;
-  const inConsultCount = tokens.filter((t) => t.status === "IN_CONSULTATION").length;
-  const completedCount = tokens.filter((t) => t.status === "COMPLETED").length;
-  const emergencyCount = tokens.filter((t) => t.result.priorityTier === "RED" && t.status !== "COMPLETED").length;
-
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-4">
       
-      {/* Top Header & Key Metrics Bar */}
-      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center space-x-2 text-blue-600 dark:text-cyan-400 font-bold text-xs uppercase tracking-wider">
-              <Stethoscope className="w-4 h-4" />
-              <span>AIIMS Smart OPD Triage Portal</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
-              {t.liveQueueTitle}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              {t.queueOverview}
-            </p>
+      {/* ── Top Single Header Box ── */}
+      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 transition-colors">
+        
+        {/* Left: Stethoscope icon + Doctor Name ONLY */}
+        <div className="flex items-center space-x-3 self-start md:self-auto">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold flex-shrink-0">
+            <Stethoscope className="w-5 h-5" />
           </div>
-
-          {emergencyCount > 0 && (
-            <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-red-100 dark:bg-red-950/80 border-2 border-red-500 text-red-800 dark:text-red-300 shadow-md animate-pulse">
-              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
-              <div className="text-xs">
-                <span className="font-extrabold uppercase block text-red-900 dark:text-white">Emergency Alert</span>
-                <span>{emergencyCount} Red-Tier Patient(s) In Trauma Queue</span>
-              </div>
-            </div>
-          )}
+          <span className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">
+            {doctorName || "Dr. Arvind Sharma"}
+          </span>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold">
-              <span>{t.waitingPatients}</span>
-              <Users className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
-            </div>
-            <span className="text-3xl font-black text-slate-900 dark:text-white">{waitingCount}</span>
-          </div>
+        {/* Center: Emergency Patients & OPD Patients Toggle Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          {/* 1. Emergency Patients Tab */}
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("EMERGENCY")}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
+              categoryFilter === "EMERGENCY"
+                ? "bg-red-600 text-white shadow-md shadow-red-600/30 ring-2 ring-red-400"
+                : "bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 border border-slate-200 dark:border-slate-800"
+            }`}
+          >
+            <AlertOctagon className={`w-4 h-4 ${categoryFilter === "EMERGENCY" ? "text-white" : "text-red-500"}`} />
+            <span>{lang === "hi" ? "आपातकालीन मरीज" : "Emergency Patients"}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+              categoryFilter === "EMERGENCY" ? "bg-red-800 text-white" : "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+            }`}>
+              {totalEmergencyCount}
+            </span>
+          </button>
 
-          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold">
-              <span>{t.inConsultation}</span>
-              <Activity className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            </div>
-            <span className="text-3xl font-black text-amber-600 dark:text-amber-300">{inConsultCount}</span>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold">
-              <span>{t.completedToday}</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{completedCount}</span>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold">
-              <span>{t.avgWaitTime}</span>
-              <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="text-3xl font-black text-blue-600 dark:text-blue-300">12 {t.minutes}</span>
-          </div>
-
+          {/* 2. OPD Patients Tab */}
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("OPD")}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
+              categoryFilter === "OPD"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400"
+                : "bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 border border-slate-200 dark:border-slate-800"
+            }`}
+          >
+            <Stethoscope className={`w-4 h-4 ${categoryFilter === "OPD" ? "text-white" : "text-emerald-500"}`} />
+            <span>{lang === "hi" ? "ओपीडी मरीज" : "OPD Patients"}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+              categoryFilter === "OPD" ? "bg-emerald-800 text-white" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+            }`}>
+              {totalOpdCount}
+            </span>
+          </button>
         </div>
 
-        {/* Department Filter Tabs */}
-        <div className="flex items-center space-x-2 overflow-x-auto pb-2 pt-1">
-          <Filter className="w-4 h-4 text-slate-400 flex-shrink-0 mr-1" />
-          {departments.map((dept) => {
-            const isSelected = selectedDept === dept;
-            const count = dept === "ALL" ? tokens.length : tokens.filter((x) => x.result.department === dept).length;
-            return (
-              <button
-                key={dept}
-                onClick={() => setSelectedDept(dept)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 ${
-                  isSelected
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                    : "bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
-                }`}
-              >
-                <span>{dept === "ALL" ? t.allDepartments : dept}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? "bg-emerald-800 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Right: Logout Session */}
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300 text-xs font-bold transition-colors flex items-center space-x-1.5 shadow-sm self-end md:self-auto flex-shrink-0 active:scale-95"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Logout Session</span>
+          </button>
+        )}
 
       </div>
 
@@ -206,50 +200,54 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ lang, voiceGuide
             const isRed = result.priorityTier === "RED";
             const isYellow = result.priorityTier === "YELLOW";
             const isCalling = callingTokenId === token.id;
+            const isEmerg = isEmergencyToken(token);
+
+            const displayTokenNumber = !isEmerg && result.tokenNumber.startsWith("ER-")
+              ? `${(result.department === "General Medicine" ? "GEN" : result.department.slice(0, 3)).toUpperCase()}-${result.tokenNumber.replace("ER-", "")}`
+              : result.tokenNumber;
 
             return (
               <div
                 key={token.id}
-                className={`bg-white dark:bg-slate-900/90 rounded-3xl p-6 border transition-all shadow-md space-y-4 ${
-                  isRed
+                className={`bg-white dark:bg-slate-900/90 rounded-3xl p-5 sm:p-6 border transition-all shadow-md space-y-4 ${
+                  isEmerg
                     ? "border-red-500 ring-2 ring-red-500/20 shadow-red-500/10 dark:shadow-red-950/40"
+                    : isRed
+                    ? "border-red-400 dark:border-red-600/60 shadow-red-500/10 dark:shadow-red-950/20"
                     : isYellow
                     ? "border-amber-400 dark:border-amber-500/60 shadow-amber-500/10 dark:shadow-amber-950/20"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                 }`}
               >
-                {/* Header row: Token ID, Priority, Dept, Room, Status */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
+                {/* Header row: Token ID, Priority, Dept, Status */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 gap-3">
                   <div className="flex items-center space-x-3">
-                    <span className={`text-2xl sm:text-3xl font-black ${isRed ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-cyan-400"}`}>
-                      {result.tokenNumber}
+                    <span className={`text-2xl sm:text-3xl font-black ${isEmerg ? "text-red-600 dark:text-red-400" : isRed ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-cyan-400"}`}>
+                      {displayTokenNumber}
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase border ${
-                        isRed
+                        isEmerg
                           ? "bg-red-100 dark:bg-red-950 border-red-300 dark:border-red-500 text-red-700 dark:text-red-300 animate-pulse"
+                          : isRed
+                          ? "bg-red-100 dark:bg-red-950 border-red-300 dark:border-red-500 text-red-700 dark:text-red-300"
                           : isYellow
                           ? "bg-amber-100 dark:bg-amber-950 border-amber-300 dark:border-amber-500 text-amber-800 dark:text-amber-300"
                           : "bg-emerald-100 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-500 text-emerald-800 dark:text-emerald-300"
                       }`}
                     >
-                      {isRed ? "RED (Emergency)" : isYellow ? "YELLOW (Urgent)" : "GREEN (Standard)"}
+                      {isEmerg ? "RED (Emergency)" : isRed ? "RED (High Priority OPD)" : isYellow ? "YELLOW (Urgent)" : "GREEN (Standard)"}
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-3 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="flex items-center space-x-1 font-semibold text-slate-900 dark:text-white">
+                    <span className="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
                       <Activity className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
                       <span>{result.department}</span>
                     </span>
                     <span>•</span>
-                    <span className="flex items-center space-x-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{result.roomNumber}</span>
-                    </span>
-                    <span>•</span>
                     <span
-                      className={`px-2.5 py-1 rounded-lg font-bold ${
+                      className={`px-2.5 py-1 rounded-lg font-black text-[11px] uppercase tracking-wider ${
                         status === "WAITING"
                           ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                           : status === "CALLED"
@@ -264,90 +262,72 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({ lang, voiceGuide
                   </div>
                 </div>
 
-                {/* Patient Information & Clinical Triage Presentation */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs sm:text-sm">
+                {/* Big Box: Patient Details + Action Buttons */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 text-xs sm:text-sm">
                   
-                  {/* Patient Info (4 cols) */}
-                  <div className="md:col-span-4 bg-slate-50 dark:bg-slate-950/70 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5">
-                    <div>
-                      <span className="text-slate-500 font-semibold block text-[11px] uppercase">{t.patientName}</span>
-                      <span className="font-bold text-slate-900 dark:text-white text-base">{input.patientName}</span>
-                    </div>
-                    <div className="text-slate-600 dark:text-slate-300">
-                      <span>{input.age} Yrs</span> • <span>{input.gender}</span> • <span>+91 ••••• {input.phone.slice(-4)}</span>
-                    </div>
-                    {input.abhaId && (
-                      <div className="text-slate-500 dark:text-slate-400 text-[11px]">
-                        ABHA: {input.abhaId}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Chief Complaints & Suggested Clinical Checks (5 cols) */}
-                  <div className="md:col-span-5 bg-slate-50 dark:bg-slate-950/70 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-                    <div>
-                      <span className="text-slate-500 font-semibold block text-[11px] uppercase">{t.chiefComplaints}</span>
-                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                        {result.chiefComplaintSummaryEn}
-                      </p>
-                    </div>
-
-                    {result.suggestedFirstChecks && result.suggestedFirstChecks.length > 0 && (
-                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-                        <span className="text-blue-600 dark:text-cyan-400 font-semibold block text-[10px] uppercase">Recommended Stat Tests</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {result.suggestedFirstChecks.map((chk, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[11px] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
-                              {chk}
-                            </span>
-                          ))}
+                  {/* Single Big Box: Patient Name, Age, Gender, and Complaints Filed */}
+                  <div className="lg:col-span-8 bg-slate-50 dark:bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 pb-2.5 border-b border-slate-200/80 dark:border-slate-800/80">
+                      <div>
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Patient</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">
+                            {input.patientName}
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-400 font-semibold text-xs sm:text-sm">
+                            • {input.age} Yrs {input.gender ? `• ${input.gender}` : ""}
+                          </span>
                         </div>
                       </div>
-                    )}
+                      {input.phone && (
+                        <span className="text-slate-500 dark:text-slate-400 text-xs">
+                          +91 ••••• {input.phone.slice(-4)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Complaints Filed
+                      </span>
+                      <p className="font-medium text-slate-800 dark:text-slate-200 leading-relaxed text-xs sm:text-sm">
+                        {result.chiefComplaintSummaryEn || (input.selectedSymptoms && input.selectedSymptoms.join(", ")) || "No complaints documented."}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Actions Column (3 cols) */}
-                  <div className="md:col-span-3 flex flex-col justify-center space-y-2">
+                  {/* Actions Column (3 options) */}
+                  <div className="lg:col-span-4 flex flex-col justify-center space-y-2.5">
                     
-                    {/* Call Next Button with Audio Announcement */}
+                    {/* Option 1: Call patient */}
                     <button
                       type="button"
                       onClick={() => handleCallPatient(token)}
                       disabled={isCalling}
-                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-1.5 transition-colors"
+                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all active:scale-95 disabled:opacity-50"
                     >
                       <Volume2 className={`w-4 h-4 ${isCalling ? "animate-spin text-emerald-200" : ""}`} />
-                      <span>{isCalling ? t.callingAudio : t.callNextPatient}</span>
+                      <span>{isCalling ? "Calling..." : "Call patient"}</span>
                     </button>
 
-                    {status !== "IN_CONSULTATION" && status !== "COMPLETED" && (
-                      <button
-                        type="button"
-                        onClick={() => handleStartConsult(token.id)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-colors"
-                      >
-                        {t.startConsultation}
-                      </button>
-                    )}
-
-                    {status === "IN_CONSULTATION" && (
-                      <button
-                        type="button"
-                        onClick={() => handleCompleteConsult(token.id)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
-                      >
-                        {t.markCompleted}
-                      </button>
-                    )}
-
-                    {/* View OCR Records Button */}
+                    {/* Option 2: View Past medical reports */}
                     <button
                       type="button"
                       onClick={() => setSelectedTokenForOcr(token)}
-                      className="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors flex items-center justify-center space-x-1 border border-slate-200 dark:border-slate-700"
+                      className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-2 border border-slate-200 dark:border-slate-700 active:scale-95 shadow-sm"
                     >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>{t.viewOcrRecords}</span>
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
+                      <span>View Past medical reports</span>
+                    </button>
+
+                    {/* Option 3: Finish and call next person */}
+                    <button
+                      type="button"
+                      onClick={() => handleFinishAndCallNext(token)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Finish and call next person</span>
                     </button>
 
                   </div>

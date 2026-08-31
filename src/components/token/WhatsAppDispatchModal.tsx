@@ -52,11 +52,11 @@ export const WhatsAppDispatchModal: React.FC<WhatsAppDispatchModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center">
-            <Smartphone className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-11 h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center flex-shrink-0">
+            <Smartphone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{t.whatsAppSentTitle}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{t.whatsAppSentTitle}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Dispatched to +91 ••••• {input.phone.slice(-4)} via WhatsApp Cloud API
             </p>
@@ -138,7 +138,7 @@ export const WhatsAppDispatchModal: React.FC<WhatsAppDispatchModalProps> = ({
             href={waMeLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center space-x-2"
+            className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-500/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-2"
           >
             <Send className="w-4 h-4" />
             <span>{t.openRealWhatsApp}</span>
@@ -147,7 +147,7 @@ export const WhatsAppDispatchModal: React.FC<WhatsAppDispatchModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors"
+            className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
           >
             {t.close}
           </button>
