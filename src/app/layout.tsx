@@ -31,9 +31,9 @@ export default function RootLayout({
         {/* 3D Frosted Glass Medical Green Watermark Background */}
         <div
           aria-hidden="true"
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.12] dark:opacity-[0.08] transition-opacity duration-300"
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.35] dark:opacity-[0.30] transition-opacity duration-300"
           style={{
-            backgroundImage: `url('/images/medical-bg.jpg')`,
+            backgroundImage: `url('/images/hospital-ward-bg.jpg')`,
             backgroundAttachment: "fixed",
           }}
         />
