@@ -2,19 +2,31 @@ import { Language } from "./i18n";
 
 export const LANG_LOCALE_MAP: Record<Language, string> = {
   en: "en-IN",
+  as: "as-IN",
+  bn: "bn-IN",
+  brx: "brx-IN",
+  doi: "doi-IN",
+  gu: "gu-IN",
   hi: "hi-IN",
-  mr: "mr-IN",
   kn: "kn-IN",
+  ks: "ks-IN",
+  kok: "kok-IN",
+  mai: "mai-IN",
+  ml: "ml-IN",
+  mni: "mni-IN",
+  mr: "mr-IN",
+  ne: "ne-NP",
+  or: "or-IN",
+  pa: "pa-IN",
+  sa: "sa-IN",
+  sat: "sat-IN",
+  sd: "sd-IN",
   ta: "ta-IN",
   te: "te-IN",
-  bn: "bn-IN",
-  gu: "gu-IN",
-  pa: "pa-IN",
-  ml: "ml-IN",
-  or: "or-IN",
-  as: "as-IN",
   ur: "ur-IN",
 };
+
+let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 /**
  * Web Speech API Text-to-Speech (TTS) Voice Synthesis
@@ -26,12 +38,14 @@ export function speakText(text: string, lang: Language = "en", onEnd?: () => voi
     return;
   }
 
-  // Cancel any ongoing speech
+  // Cancel any ongoing speech immediately
   window.speechSynthesis.cancel();
+  currentUtterance = null;
 
-  // Short timeout prevents Chrome bug where cancel() immediately followed by speak() drops the audio or overlaps
+  // Short timeout prevents Chrome/Safari bug where cancel() followed immediately by speak() drops audio
   setTimeout(() => {
     const utterance = new SpeechSynthesisUtterance(text);
+    currentUtterance = utterance;
     utterance.rate = 0.95; // Slightly slower for clear kiosk audibility
     utterance.pitch = 1.0;
     
@@ -59,18 +73,24 @@ export function speakText(text: string, lang: Language = "en", onEnd?: () => voi
       utterance.voice = targetVoice;
     }
 
-    if (onEnd) {
-      utterance.onend = onEnd;
-      utterance.onerror = onEnd;
-    }
+    utterance.onend = () => {
+      currentUtterance = null;
+      if (onEnd) onEnd();
+    };
+
+    utterance.onerror = () => {
+      currentUtterance = null;
+      if (onEnd) onEnd();
+    };
 
     window.speechSynthesis.speak(utterance);
-  }, 50);
+  }, 30);
 }
 
 export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
+    currentUtterance = null;
   }
 }
 

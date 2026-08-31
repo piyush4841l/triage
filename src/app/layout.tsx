@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { FontSizeProvider } from "@/lib/font-size-context";
+import { LanguageProvider } from "@/lib/language-context";
 
 export const metadata: Metadata = {
-  title: "TRIAGE - Visual OPD Token System",
-  description: "Voice-enabled, multilingual, visual anatomical triage portal and OPD token system for public healthcare facilities.",
+  title: "SwasthyaSetu - Smart Healthcare Kiosk",
+  description: "Bridging every patient to better care. Voice-enabled, multilingual visual OPD token kiosk and hospital triage system.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/images/swasthya-setu-logo.jpg",
   }
 };
 
@@ -27,22 +28,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white transition-colors duration-200 relative">
-        {/* 3D Frosted Glass Medical Green Watermark Background */}
+      <body className="antialiased text-slate-900 dark:text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white transition-colors duration-200 relative">
+        {/* Doctor background image — very subtle texture */}
         <div
           aria-hidden="true"
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.12] dark:opacity-[0.08] transition-opacity duration-300"
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15 dark:opacity-10"
           style={{
-            backgroundImage: `url('/images/medical-bg.jpg')`,
+            backgroundImage: `url('/images/doctor-bg.jpg')`,
             backgroundAttachment: "fixed",
           }}
+        />
+        {/* Soft background tint with high clarity */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none z-0 bg-slate-50/75 dark:bg-slate-950/85 transition-colors duration-300"
         />
 
         <ThemeProvider>
           <FontSizeProvider>
-            <div className="relative z-10 min-h-screen flex flex-col">
-              {children}
-            </div>
+            <LanguageProvider>
+              <div className="relative z-10 min-h-screen flex flex-col">
+                {children}
+              </div>
+            </LanguageProvider>
           </FontSizeProvider>
         </ThemeProvider>
       </body>

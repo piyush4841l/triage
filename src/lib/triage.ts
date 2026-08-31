@@ -1,4 +1,5 @@
 import { BodyRegionId, BODY_REGIONS } from "./anatomy-data";
+import { ALL_HOSPITAL_SPECIALTIES, getSpecialtyByName } from "./departments";
 
 export type PriorityTier = "RED" | "YELLOW" | "GREEN";
 
@@ -38,20 +39,17 @@ export interface TriageResult {
   assignedDoctorName: string;
 }
 
-const DEPARTMENT_ROOMS: Record<string, { room: string; counter: string; doctorEn: string; doctorHi: string; baseWait: number }> = {
-  "Emergency & Trauma": { room: "Room 01 (Trauma Bay)", counter: "Counter ER-01", doctorEn: "Dr. Vikram Singh (Chief Trauma Officer)", doctorHi: "डॉ. विक्रम सिंह (मुख्य आपातकालीन अधिकारी)", baseWait: 0 },
-  "Cardiology": { room: "Room 102 (Cardio OPD)", counter: "Counter 02", doctorEn: "Dr. Ananya Sharma (Cardiologist)", doctorHi: "डॉ. अनन्या शर्मा (हृदय रोग विशेषज्ञ)", baseWait: 15 },
-  "Pulmonology": { room: "Room 104 (Chest & Respiratory)", counter: "Counter 04", doctorEn: "Dr. Arvind Mehta (Pulmonologist)", doctorHi: "डॉ. अरविंद मेहता (श्वसन रोग विशेषज्ञ)", baseWait: 10 },
-  "Gastroenterology": { room: "Room 106 (Gastro & Liver)", counter: "Counter 06", doctorEn: "Dr. Priya Deshmukh (Gastroenterologist)", doctorHi: "डॉ. प्रिया देशमुख (पेट व यकृत रोग विशेषज्ञ)", baseWait: 12 },
-  "Neurology": { room: "Room 108 (Neuro OPD)", counter: "Counter 08", doctorEn: "Dr. Rajesh Iyer (Neurologist)", doctorHi: "डॉ. राजेश अय्यर (मस्तिष्क रोग विशेषज्ञ)", baseWait: 20 },
-  "Orthopedics": { room: "Room 110 (Bone & Joint Clinic)", counter: "Counter 10", doctorEn: "Dr. Suresh Patel (Orthopedic Surgeon)", doctorHi: "डॉ. सुरेश पटेल (अस्थि रोग विशेषज्ञ)", baseWait: 15 },
-  "ENT": { room: "Room 112 (Ear, Nose & Throat)", counter: "Counter 12", doctorEn: "Dr. Neha Verma (ENT Specialist)", doctorHi: "डॉ. नेहा वर्मा (ईएनटी विशेषज्ञ)", baseWait: 8 },
-  "Urology": { room: "Room 114 (Uro & Renal Clinic)", counter: "Counter 14", doctorEn: "Dr. Alok Gupta (Urologist)", doctorHi: "डॉ. आलोक गुप्ता (मूत्र रोग विशेषज्ञ)", baseWait: 14 },
-  "Dermatology": { room: "Room 116 (Skin Clinic)", counter: "Counter 16", doctorEn: "Dr. Kavita Nair (Dermatologist)", doctorHi: "डॉ. कविता नायर (त्वचा रोग विशेषज्ञ)", baseWait: 10 },
-  "General Medicine": { room: "Room 101 (Primary Care OPD)", counter: "Counter 01", doctorEn: "Dr. Sunita Rao (Senior Physician)", doctorHi: "डॉ. सुनीता राव (वरिष्ठ चिकित्सक)", baseWait: 10 },
-  "General Surgery": { room: "Room 118 (Surgical OPD)", counter: "Counter 18", doctorEn: "Dr. Harish Chandra (General Surgeon)", doctorHi: "डॉ. हरीश चंद्र (शल्य चिकित्सक)", baseWait: 15 },
-  "Ophthalmology": { room: "Room 120 (Eye OPD)", counter: "Counter 20", doctorEn: "Dr. Madhavan Pillai (Eye Specialist)", doctorHi: "डॉ. माधवन पिल्लई (नेत्र रोग विशेषज्ञ)", baseWait: 10 },
-};
+export const DEPARTMENT_ROOMS: Record<string, { room: string; counter: string; doctorEn: string; doctorHi: string; baseWait: number }> = {};
+
+ALL_HOSPITAL_SPECIALTIES.forEach((spec) => {
+  DEPARTMENT_ROOMS[spec.nameEn] = {
+    room: spec.room,
+    counter: spec.counter,
+    doctorEn: spec.doctorEn,
+    doctorHi: spec.doctorHi,
+    baseWait: spec.baseWait,
+  };
+});
 
 export function computeTriage(input: TriageInput, currentDepartmentQueueCounts: Record<string, number> = {}): TriageResult {
   const tokenRandomSuffix = Math.floor(100 + Math.random() * 900);
@@ -180,30 +178,22 @@ export function computeTriage(input: TriageInput, currentDepartmentQueueCounts: 
     acuityScoreText = "Level 2: Urgent Care (Yellow)";
   }
 
-  const deptInfo = DEPARTMENT_ROOMS[topDepartment] || DEPARTMENT_ROOMS["General Medicine"];
+  const specDef = getSpecialtyByName(topDepartment) || getSpecialtyByName("General Medicine")!;
+  const deptInfo = DEPARTMENT_ROOMS[topDepartment] || DEPARTMENT_ROOMS["General Medicine"] || {
+    room: specDef.room,
+    counter: specDef.counter,
+    doctorEn: specDef.doctorEn,
+    doctorHi: specDef.doctorHi,
+    baseWait: specDef.baseWait,
+  };
   const currentDeptQueue = currentDepartmentQueueCounts[topDepartment] || Math.floor(Math.random() * 4) + 1;
 
   let estimatedWait = deptInfo.baseWait + currentDeptQueue * 4;
   if (priorityTier === "RED") estimatedWait = Math.min(estimatedWait, 2);
   else if (priorityTier === "YELLOW") estimatedWait = Math.max(5, Math.floor(estimatedWait * 0.5));
 
-  const prefix = priorityTier === "RED" ? "ER" : topDepartment.slice(0, 3).toUpperCase();
-  const tokenNumber = `${prefix}-${tokenRandomSuffix}`;
-
-  const deptTranslations: Record<string, string> = {
-    "Cardiology": "हृदय रोग विभाग (Cardiology)",
-    "Pulmonology": "श्वसन व फेफड़ा रोग विभाग (Pulmonology)",
-    "Gastroenterology": "पेट व पाचन रोग विभाग (Gastroenterology)",
-    "Neurology": "मस्तिष्क व तंत्रिका रोग विभाग (Neurology)",
-    "Orthopedics": "हड्डी व जोड़ रोग विभाग (Orthopedics)",
-    "ENT": "कान, नाक व गला विभाग (ENT)",
-    "Urology": "मूत्र रोग विभाग (Urology)",
-    "Dermatology": "त्वचा रोग विभाग (Dermatology)",
-    "General Medicine": "सामान्य चिकित्सा विभाग (General Medicine)",
-    "General Surgery": "सामान्य शल्य चिकित्सा विभाग (Surgery)",
-    "Ophthalmology": "नेत्र रोग विभाग (Ophthalmology)",
-    "Emergency & Trauma": "आपातकालीन एवं ट्रॉमा विभाग",
-  };
+  const deptPrefix = topDepartment === "General Medicine" ? "GEN" : topDepartment.slice(0, 3).toUpperCase();
+  const tokenNumber = `${deptPrefix}-${tokenRandomSuffix}`;
 
   const chiefComplaintEn = input.isDontKnow
     ? "General Body Discomfort (Patient unsure of specific organ)"
@@ -223,13 +213,15 @@ export function computeTriage(input: TriageInput, currentDepartmentQueueCounts: 
     topDepartment === "Cardiology" ? "12-Lead Baseline ECG" : topDepartment === "Pulmonology" ? "Peak Flow & Chest Auscultation" : "Basic Clinical Palpation",
   ];
 
+  const departmentHi = specDef.nameHi || topDepartment;
+
   return {
     tokenId: `TOKEN-${tokenNumber}`,
     tokenNumber,
     priorityTier,
     acuityScoreText,
     department: topDepartment,
-    departmentHi: deptTranslations[topDepartment] || topDepartment,
+    departmentHi,
     roomNumber: deptInfo.room,
     counterNumber: deptInfo.counter,
     estimatedWaitMinutes: estimatedWait,
@@ -237,7 +229,7 @@ export function computeTriage(input: TriageInput, currentDepartmentQueueCounts: 
     chiefComplaintSummaryEn: chiefComplaintEn,
     chiefComplaintSummaryHi: chiefComplaintHi,
     triageRationaleEn: `Assigned to ${topDepartment} based on ${symptomNamesEn.length} specific symptom tags and pain severity ${input.painSeverity}/10.`,
-    triageRationaleHi: `${symptomNamesHi.length} दर्ज लक्षणों और दर्द की तीव्रता (${input.painSeverity}/10) के आधार पर ${deptTranslations[topDepartment] || topDepartment} आवंटित।`,
+    triageRationaleHi: `${symptomNamesHi.length} दर्ज लक्षणों और दर्द की तीव्रता (${input.painSeverity}/10) के आधार पर ${departmentHi} आवंटित।`,
     suggestedFirstChecks: suggestedChecks,
     assignedDoctorName: deptInfo.doctorEn,
   };

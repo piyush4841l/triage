@@ -39,8 +39,22 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   const [phone, setPhone] = useState("");
   const [isListeningPhone, setIsListeningPhone] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   if (!isOpen) return null;
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!patientName.trim()) {
+      e.name = lang === "hi" ? "कृपया पूरा नाम दर्ज करें" : "Full name is required";
+    }
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      e.phone = lang === "hi" ? "कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें" : "Valid 10-digit mobile number required";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handleMicPhone = () => {
     if (isListeningPhone) {
@@ -67,10 +81,12 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   };
 
   const handleGenerateEmergencyToken = () => {
+    if (!validate()) return;
     setIsGenerating(true);
 
-    const effectivePhone = phone.trim() || "9999999999";
-    const effectiveName = patientName.trim() || (lang === "hi" ? "आपातकालीन मरीज" : "Emergency Patient");
+    const cleanPhone = phone.replace(/\D/g, "");
+    const effectivePhone = cleanPhone;
+    const effectiveName = patientName.trim();
     const effectiveAbha = abhaId.trim() || undefined;
 
     const triageResult = computeTriage({
@@ -141,11 +157,11 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
 
         {/* Emergency Header */}
         <div className="flex items-center space-x-3">
-          <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-600/20 border-2 border-red-500 flex items-center justify-center animate-pulse">
-            <AlertOctagon className="w-8 h-8 text-red-600 dark:text-red-500" />
+          <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-600/20 border-2 border-red-500 flex items-center justify-center animate-pulse flex-shrink-0">
+            <AlertOctagon className="w-6 h-6 text-red-600 dark:text-red-500" />
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-red-600 dark:text-red-400 tracking-tight flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-red-600 dark:text-red-400 tracking-tight flex items-center gap-2">
               <span>{t.emergencyModalTitle}</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
@@ -166,15 +182,16 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <User className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.fullName}</span>
+                <span>{t.fullName}</span> <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
                 placeholder="e.g. Ramesh Kumar"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none"
+                className={`w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border ${errors.name ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-red-500"} text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-sm`}
               />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
 
             {/* 2. ABHA ID / Aadhaar */}
@@ -186,9 +203,16 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
               <input
                 type="text"
                 value={abhaId}
-                onChange={(e) => setAbhaId(e.target.value)}
-                placeholder="14-digit ABHA ID or Aadhaar"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 14);
+                  if (digits.length <= 2) setAbhaId(digits);
+                  else if (digits.length <= 6) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2)}`);
+                  else if (digits.length <= 10) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6)}`);
+                  else setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}-${digits.slice(10, 14)}`);
+                }}
+                maxLength={17}
+                placeholder="14-digit ABHA ID (optional)"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
               />
             </div>
 
@@ -196,15 +220,15 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
             <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <Phone className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.phone}</span>
+                <span>{t.phone}</span> <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   placeholder="10-digit Mobile No."
-                  className="w-full h-11 pl-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none"
+                  className={`w-full h-11 pl-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950/80 border ${errors.phone ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-red-500"} text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-sm`}
                 />
                 <button
                   type="button"
@@ -219,6 +243,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                   {isListeningPhone ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
                 </button>
               </div>
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
 
           </div>
@@ -226,7 +251,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
 
         {/* Warning Note */}
         <div className="flex items-start space-x-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 text-xs text-red-800 dark:text-red-200">
-          <ShieldAlert className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+          <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <p>{t.emergencyWarning}</p>
         </div>
 
@@ -235,10 +260,10 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
           type="button"
           onClick={handleGenerateEmergencyToken}
           disabled={isGenerating}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-lg shadow-lg shadow-red-500/30 active:scale-95 transition-all flex items-center justify-center space-x-3"
+          className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-sm sm:text-base shadow-md shadow-red-500/25 active:scale-[0.99] transition-all flex items-center justify-center space-x-2"
         >
           <span>{isGenerating ? "Dispatching Token..." : t.generateEmergencyToken}</span>
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className="w-5 h-5" />
         </button>
 
       </div>

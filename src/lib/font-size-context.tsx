@@ -22,19 +22,21 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
   const [fontSize, setFontSizeState] = useState<FontSize>("normal");
 
   useEffect(() => {
-    const saved = localStorage.getItem("kiosk_font_size") as FontSize | null;
-    const initial = saved === "large" || saved === "xlarge" || saved === "normal" ? saved : "normal";
-    setFontSizeState(initial);
-    applyFontSize(initial);
+    // Reset to normal 16px original scale
+    setFontSizeState("normal");
+    applyFontSize("normal");
+    try {
+      localStorage.removeItem("kiosk_font_size");
+    } catch (e) {}
   }, []);
 
   const applyFontSize = (size: FontSize) => {
     const root = document.documentElement;
     root.setAttribute("data-font-size", size);
     if (size === "large") {
-      root.style.fontSize = "18px";
+      root.style.fontSize = "17px";
     } else if (size === "xlarge") {
-      root.style.fontSize = "20px";
+      root.style.fontSize = "18px";
     } else {
       root.style.fontSize = "16px";
     }
