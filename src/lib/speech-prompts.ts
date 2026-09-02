@@ -1,6 +1,7 @@
 import { Language } from "./i18n";
 
 export interface VoicePrompts {
+  modal: string;
   step0: string;
   step1: string;
   step2: string;
@@ -13,28 +14,34 @@ export interface VoicePrompts {
 }
 
 const baseEn: VoicePrompts = {
-  step0: "Welcome. On the top right corner you can change language, text size, theme dark or light, and mute the voice. Select from option 1. Emergency, 2. OPD, 3. OPD Token Display, 4. Doctor or Staff Portal.",
-  step1: "Please enter or speak your Full Name, Age, Gender, 10-digit Mobile Number, and either your ABHA ID or Aadhaar Number. You can also use the mic button next to each field to speak.",
-  step2: "Select the body part. Tap on the body model or select from the list.",
-  step3: "Upload previous prescriptions or reports, or proceed.",
-  step4: "Your OPD token has been successfully generated. Please collect your receipt.",
+  step0: "Welcome to the Smart Triage Kiosk. On the top right corner you can change language, text size, theme dark or light, and mute the voice. Please select from option 1: Emergency, 2: OPD, 3: OPD Token Display, or 4: Doctor or Staff Portal.",
+  step1: "Welcome to Patient Registration. Please enter your Full Name, Age, Gender, 10-digit Mobile Number, and your ABHA ID or Aadhaar Number. You can type them in or use the microphone icon next to each field to speak. Tap Next when you are done.",
+  step2: "This is the interactive body map. Please tap on the specific body region where you are experiencing pain or discomfort. You can tap on the skeleton model directly, or select a region from the list on the right side.",
+  modal: "You have selected a body part. Now, please select the specific affected areas and any common symptoms you are experiencing from the list. If you are unsure, you can tap I don't know. Then, select your pain severity and duration, and tap Save Symptoms.",
+  step3: "Medical Record Upload. If you have any previous prescriptions or lab reports, you can upload them here. Tap the upload button to capture or browse files. If you don't have any, you can tap Continue to skip this step.",
+  step4: "Your OPD Token has been successfully generated. Please collect your thermal slip and proceed to the waiting area. The doctor will see you shortly.",
   langChanged: "Language changed to English.",
-  voiceActive: "Voice assistant activated.",
+  voiceActive: "Voice assistant is now active.",
   stateSelected: (s) => `State ${s} selected.`,
   emergencyIssued: (num) => `Emergency token ${num} issued. Please go to Room 01 Trauma Ward immediately.`,
 };
 
+
+
 const baseHi: VoicePrompts = {
-  step0: "Swagat hai. Upar dayen kone mein aap bhasha, text size, theme dark ya light badal sakte hain aur aawaz band kar sakte hain. Option 1. Emergency, 2. OPD, 3. OPD Token Display, 4. Doctor ya Staff Portal mein se chunen.",
-  step1: "Kripaya apna poora naam, mobile number, ABHA ID aur Aadhaar number darj karen ya bolen.",
-  step2: "Sharir ke nakashe par dard wale hisson ko chhukar chunen.",
-  step3: "Pichhli dawa parchi ya report upload karen ya aage badhein.",
-  step4: "Aapka OPD token safaltapurvak generate ho gaya hai. Kripaya rasid len.",
+  step0: "Smart Triage Kiosk mein aapka swagat hai. Upar dayen kone mein aap bhasha, text size, theme dark ya light badal sakte hain aur aawaz band kar sakte hain. Kripaya option 1: Emergency, 2: OPD, 3: OPD Token Display, ya 4: Doctor Portal mein se chunen.",
+  step1: "Marij panjikaran mein aapka swagat hai. Kripaya apna poora naam, umra, ling, das ankon ka mobile number, aur apna ABHA ID ya Aadhaar number darj karein. Aap type kar sakte hain ya bolne ke liye har field ke bagal mein diye gaye mic icon ka upyog kar sakte hain. Pura hone par Next dabayein.",
+  step2: "Yeh interactive body map hai. Kripaya sharir ke us hisse par tap karein jahan aapko dard ya pareshani ho rahi hai. Aap seedhe skeleton model par tap kar sakte hain, ya daen or di gayi suchi mein se koi hissa chun sakte hain.",
+  modal: "Aapne ek sharir ka hissa chuna hai. Ab, kripaya suchi mein se prabhavit ang aur apne lakshan chunein. Agar aapko nahi pata, toh 'Mujhe nahi pata' par tap karein. Phir, apne dard ki teevrata aur samay avadhi chunein, aur Save Symptoms par tap karein.",
+  step3: "Medical record upload. Yadi aapke paas koi pichli prescription ya lab report hai, toh aap unhein yahan upload kar sakte hain. File capture ya browse karne ke liye upload button par tap karein. Agar aapke paas koi report nahi hai, toh aap is step ko chhodne ke liye aage badhein par tap kar sakte hain.",
+  step4: "Aapka OPD token safaltapurvak ban gaya hai. Kripaya apni thermal slip lein aur pratiksha kshetra mein jayein. Doctor jaldi hi aapse milenge.",
   langChanged: "Bhasha Hindi mein badal gayi hai.",
-  voiceActive: "Voice sahayak sakriy ho gaya hai.",
+  voiceActive: "Voice assistant sakriya ho gaya hai.",
   stateSelected: (s) => `Rajya ${s} chuna gaya.`,
-  emergencyIssued: (num) => `Emergency token ${num} jari kiya gaya hai. Kamra 01 Trauma Ward mein jaayen.`,
+  emergencyIssued: (num) => `Emergency token ${num} jaari kiya gaya hai. Kripaya turant Kamra sankhya ek Trauma Ward mein jayen.`,
 };
+
+
 
 export const VOICE_PROMPTS: Record<Language, VoicePrompts> = {
   en: baseEn,

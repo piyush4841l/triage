@@ -13,6 +13,7 @@ import {
 import { BodyRegionId, BODY_REGIONS, SubOrgan, SymptomItem } from "@/lib/anatomy-data";
 import { Language, translations } from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
+import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 
 export interface SymptomDrillDownData {
   selectedOrgans: string[];
@@ -55,10 +56,9 @@ export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
   useEffect(() => {
     if (isOpen && voiceGuide && !hasSpokenRef.current) {
       hasSpokenRef.current = true;
-      speakText(
-        "Do you want to specify any body part? Select the affected organs or sub-areas, or tap Continue to Symptoms.",
-        "en"
-      );
+      const activeVoice = (lang !== "en" && lang !== "hi") ? "en" : lang;
+        const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
+        speakText(prompts.modal, activeVoice);
     }
     if (!isOpen) {
       hasSpokenRef.current = false;
