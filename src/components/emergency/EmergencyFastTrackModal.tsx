@@ -36,6 +36,8 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   const t = translations[lang] || translations.en;
   const [patientName, setPatientName] = useState("");
   const [abhaId, setAbhaId] = useState("");
+  const [aadhaarId, setAadhaarId] = useState("");
+  const [idType, setIdType] = useState<"abha" | "aadhaar">("abha");
   const [phone, setPhone] = useState("");
   const [isListeningPhone, setIsListeningPhone] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -87,7 +89,8 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
     const cleanPhone = phone.replace(/\D/g, "");
     const effectivePhone = cleanPhone;
     const effectiveName = patientName.trim();
-    const effectiveAbha = abhaId.trim() || undefined;
+    const cleanAadhaar = aadhaarId.replace(/\D/g, "");
+    const effectiveAbha = abhaId.trim() || (cleanAadhaar ? `AADHAAR-${cleanAadhaar}` : undefined);
 
     const triageResult = computeTriage({
       patientName: effectiveName,
@@ -179,7 +182,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             
             {/* 1. Full Name */}
-            <div>
+            <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <User className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                 <span>{t.fullName}</span> <span className="text-red-500">*</span>
@@ -194,26 +197,84 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
               {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
 
-            {/* 2. ABHA ID / Aadhaar */}
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
+                        {/* 2. ABHA ID / Aadhaar Toggle */}
+            <div className="sm:col-span-2 space-y-2 mt-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                 <CreditCard className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.abhaId}</span>
+                <span>{lang === "hi" ? "पहचान पत्र (ABHA / आधार)" : "Identity Verification (ABHA / Aadhaar)"}</span>
+                <span className="text-slate-500 font-normal ml-1">(Optional)</span>
               </label>
-              <input
-                type="text"
-                value={abhaId}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, "").slice(0, 14);
-                  if (digits.length <= 2) setAbhaId(digits);
-                  else if (digits.length <= 6) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2)}`);
-                  else if (digits.length <= 10) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6)}`);
-                  else setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}-${digits.slice(10, 14)}`);
-                }}
-                maxLength={17}
-                placeholder="14-digit ABHA ID (optional)"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
-              />
+
+              {/* Toggle buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdType("abha");
+                    setAadhaarId("");
+                  }}
+                  className={`h-10 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${
+                    idType === "abha"
+                      ? "bg-red-600 text-white shadow-red-600/30 ring-2 ring-red-400"
+                      : "bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-red-500"
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>{lang === "hi" ? "आभा आईडी (ABHA ID)" : "ABHA ID"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdType("aadhaar");
+                    setAbhaId("");
+                  }}
+                  className={`h-10 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${
+                    idType === "aadhaar"
+                      ? "bg-red-600 text-white shadow-red-600/30 ring-2 ring-red-400"
+                      : "bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-red-500"
+                  }`}
+                >
+                  <Fingerprint className="w-4 h-4" />
+                  <span>{lang === "hi" ? "आधार नंबर (Aadhaar)" : "Aadhaar Number"}</span>
+                </button>
+              </div>
+
+              {/* Conditional Input Box based on selected ID */}
+              {idType === "abha" && (
+                <div className="animate-in fade-in duration-200 mt-1">
+                  <input
+                    type="text"
+                    value={abhaId}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 14);
+                      if (digits.length <= 2) setAbhaId(digits);
+                      else if (digits.length <= 6) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2)}`);
+                      else if (digits.length <= 10) setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6)}`);
+                      else setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}-${digits.slice(10, 14)}`);
+                    }}
+                    maxLength={17}
+                    placeholder="14-digit ABHA ID"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
+                  />
+                </div>
+              )}
+
+              {idType === "aadhaar" && (
+                <div className="animate-in fade-in duration-200 mt-1">
+                  <input
+                    type="text"
+                    value={aadhaarId}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 12);
+                      setAadhaarId(digits);
+                    }}
+                    maxLength={12}
+                    placeholder="12-digit Aadhaar Number"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
+                  />
+                </div>
+              )}
             </div>
 
             {/* 3. Mobile No. */}
