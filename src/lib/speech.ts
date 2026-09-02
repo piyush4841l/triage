@@ -26,71 +26,99 @@ export const LANG_LOCALE_MAP: Record<Language, string> = {
   ur: "ur-IN",
 };
 
-let currentUtterance: SpeechSynthesisUtterance | null = null;
+const audioCache = new Map<string, string>();
+let currentAudio: HTMLAudioElement | null = null;
+let activeSpeechToken = 0;
 
-/**
- * Web Speech API Text-to-Speech (TTS) Voice Synthesis
- */
-export function speakText(text: string, lang: Language = "en", onEnd?: () => void) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    console.warn("Web Speech Synthesis not supported in this browser environment.");
+export function stopSpeaking() {
+  activeSpeechToken++; // Cancel any pending speech fetches
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+export async function speakText(text: string, lang: Language = "en", onEnd?: () => void) {
+  if (typeof window === "undefined") {
     if (onEnd) onEnd();
     return;
   }
 
-  // Cancel any ongoing speech immediately
-  window.speechSynthesis.cancel();
-  currentUtterance = null;
+  stopSpeaking();
+  
+  const currentToken = activeSpeechToken;
 
-  // Short timeout prevents Chrome/Safari bug where cancel() followed immediately by speak() drops audio
-  setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    currentUtterance = utterance;
-    utterance.rate = 0.95; // Slightly slower for clear kiosk audibility
-    utterance.pitch = 1.0;
+  const cacheKey = `${lang}_${text}`;
+  
+  const playBase64Audio = (base64String: string) => {
+    // Prevent playback if a newer speech request was started while we were fetching
+    if (activeSpeechToken !== currentToken) return;
     
-    const targetLocale = LANG_LOCALE_MAP[lang] || "en-IN";
-    utterance.lang = targetLocale;
+    try {
+      const audio = new Audio(`data:audio/wav;base64,${base64String}`);
+      currentAudio = audio;
+      audio.onended = () => {
+        if (activeSpeechToken === currentToken) currentAudio = null;
+        if (onEnd) onEnd();
+      };
+      audio.onerror = () => {
+        if (activeSpeechToken === currentToken) currentAudio = null;
+        if (onEnd) onEnd();
+      };
+      audio.play().catch(e => {
+        console.error("Audio playback error:", e);
+        if (onEnd) onEnd();
+      });
+    } catch (e) {
+      if (onEnd) onEnd();
+    }
+  };
 
-    // Try to find a natural native voice for the selected language
-    const voices = window.speechSynthesis.getVoices();
+  if (audioCache.has(cacheKey)) {
+    playBase64Audio(audioCache.get(cacheKey)!);
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, lang })
+    });
     
-    let targetVoice = null;
+    // Prevent proceeding if a newer speech request was started
+    if (activeSpeechToken !== currentToken) return;
     
-    if (lang === "hi") {
-      targetVoice = voices.find(v => 
-        v.lang.toLowerCase() === "hi-in" || 
-        v.lang.toLowerCase().startsWith("hi") || 
-        v.name.toLowerCase().includes("hindi")
-      );
+    if (!res.ok) throw new Error("TTS failed");
+    
+    const data = await res.json();
+    
+    if (activeSpeechToken !== currentToken) return;
+    
+    if (data.audio) {
+      audioCache.set(cacheKey, data.audio);
+      playBase64Audio(data.audio);
     } else {
-      // Default to English (India) if possible, else any English
-      targetVoice = voices.find(v => v.lang.toLowerCase() === "en-in" || v.name.toLowerCase().includes("india")) || 
-                    voices.find(v => v.lang.toLowerCase().startsWith("en"));
+      throw new Error("No audio returned");
     }
-
-    if (targetVoice) {
-      utterance.voice = targetVoice;
+  } catch (error) {
+    if (activeSpeechToken !== currentToken) return;
+    console.error("Sarvam API failed, falling back to native:", error);
+    
+    // Fallback
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = LANG_LOCALE_MAP[lang] || "en-IN";
+      utterance.onend = () => { if (onEnd) onEnd(); };
+      utterance.onerror = () => { if (onEnd) onEnd(); };
+      window.speechSynthesis.speak(utterance);
+    } else {
+      if (onEnd) onEnd();
     }
-
-    utterance.onend = () => {
-      currentUtterance = null;
-      if (onEnd) onEnd();
-    };
-
-    utterance.onerror = () => {
-      currentUtterance = null;
-      if (onEnd) onEnd();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }, 30);
-}
-
-export function stopSpeaking() {
-  if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-    currentUtterance = null;
   }
 }
 

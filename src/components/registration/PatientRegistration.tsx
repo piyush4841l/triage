@@ -10,9 +10,9 @@ import {
   Mic, 
   MicOff, 
   ArrowRight, 
-  AlertCircle,
+  AlertCircle, CheckCircle,
   Keyboard
-} from "lucide-react";
+, Loader2 } from "lucide-react";
 import { Language, translations } from "@/lib/i18n";
 import { speakText, globalSpeechRecognizer } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
@@ -63,6 +63,57 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   }>({});
   const [activeListeningField, setActiveListeningField] = useState<string | null>(null);
   const [showKeypadFor, setShowKeypadFor] = useState<"phone" | "age" | null>(null);
+
+  // ABHA Verification Flow States
+  const [abhaVerificationState, setAbhaVerificationState] = useState<"idle" | "method_select" | "awaiting_otp" | "awaiting_pass" | "requesting_consent" | "verified">("idle");
+  const [authMethod, setAuthMethod] = useState<"otp" | "pass">("otp");
+  const [otpInput, setOtpInput] = useState("");
+  const [passInput, setPassInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleStartVerification = () => {
+    if (abhaId.replace(/\D/g, "").length !== 14) {
+      setErrors((prev) => ({ ...prev, abha: "Enter full 14 digits first" }));
+      return;
+    }
+    setAbhaVerificationState("method_select");
+    speakText(lang === "hi" ? "कृपया सत्यापन विधि चुनें, ओटीपी या पासवर्ड" : "Please select your verification method, Mobile OTP or Password.", lang);
+  };
+
+  const handleSelectMethod = (method: "otp" | "pass") => {
+    setAuthMethod(method);
+    if (method === "otp") {
+      setAbhaVerificationState("awaiting_otp");
+      speakText(lang === "hi" ? "आपके आधार लिंक मोबाइल नंबर पर एक ओटीपी भेजा गया है।" : "An OTP has been sent to your Aadhaar-linked mobile number. Please enter it.", lang);
+    } else {
+      setAbhaVerificationState("awaiting_pass");
+      speakText(lang === "hi" ? "कृपया अपना ABHA पासवर्ड दर्ज करें।" : "Please enter your ABHA password.", lang);
+    }
+  };
+
+  const handleVerifyAuth = () => {
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+      setAbhaVerificationState("requesting_consent");
+      speakText(lang === "hi" ? "क्या आप अपने पिछले स्वास्थ्य रिकॉर्ड इस अस्पताल के साथ साझा करने की सहमति देते हैं?" : "Do you give consent to share your past health records with this hospital?", lang);
+    }, 1500); // Mock network delay
+  };
+
+  const handleConsent = (approved: boolean) => {
+    if (approved) {
+      setAbhaVerificationState("verified");
+      speakText(lang === "hi" ? "सत्यापन सफल रहा। आपका विवरण भर दिया गया है।" : "Verification successful. Your details have been auto-filled.", lang);
+      // Auto-fill mock data
+      setPatientName("Rahul Sharma");
+      setAge("34");
+      setGender("Male");
+      setPhone("9876543210");
+    } else {
+      setAbhaVerificationState("idle");
+    }
+  };
+
 
   // Handle Speech-to-Text Voice Dictation for inputs
   const handleVoiceInput = (field: "name" | "age" | "phone" | "abha" | "aadhaar") => {
@@ -195,10 +246,23 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto space-y-3 animate-in fade-in duration-300">
       
-      <div className="text-center pt-1 pb-0.5">
+      <div className="text-center pt-1 pb-0.5 relative">
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           {lang === "hi" ? "पंजीकरण" : "Registration"}
         </h2>
+        <button
+          type="button"
+          onClick={() => {
+            setPatientName("Amit Kumar");
+            setAge("28");
+            setGender("Male");
+            setPhone("9876543210");
+          }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-100/50 text-amber-800 text-[10px] font-bold rounded shadow-sm border border-amber-300 hover:bg-amber-200"
+        >
+          Fill Demo Data
+        </button>
+
       </div>
 
       <form 
@@ -522,12 +586,29 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                   }}
                   maxLength={17}
                   placeholder="e.g. 14-8890-4432-1102"
-                  className={`w-full h-10 sm:h-11 pl-3 pr-10 rounded-xl bg-slate-50/70 dark:bg-slate-950/60 border text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all tracking-wide ${
+                  className={`w-full h-10 sm:h-11 pl-3 pr-[80px] rounded-xl bg-slate-50/70 dark:bg-slate-950/60 border text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all tracking-wide ${
                     errors.abha || errors.identity
                       ? "border-red-500 ring-2 ring-red-500/30"
                       : "border-slate-200/80 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                   }`}
+                  disabled={abhaVerificationState === "verified"}
                 />
+                
+                {abhaVerificationState === "verified" ? (
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-[10px] font-bold">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Verified
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleStartVerification}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold px-2 py-1.5 rounded-lg transition-colors"
+                  >
+                    Verify
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => handleVoiceInput("abha")}
@@ -609,6 +690,69 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
+
+
+      {/* ABHA Verification Modals */}
+      {abhaVerificationState !== "idle" && abhaVerificationState !== "verified" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-slate-200 dark:border-slate-800 space-y-4">
+            
+            {abhaVerificationState === "method_select" && (
+              <>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white text-center">Verify Identity</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">Select authentication method for ABHA ID.</p>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button onClick={() => handleSelectMethod("otp")} className="p-3 border rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all">Mobile OTP</button>
+                  <button onClick={() => handleSelectMethod("pass")} className="p-3 border rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all">Password</button>
+                </div>
+                <button onClick={() => setAbhaVerificationState("idle")} className="w-full text-xs text-slate-400 hover:text-slate-600 pt-2">Cancel</button>
+              </>
+            )}
+
+            {(abhaVerificationState === "awaiting_otp" || abhaVerificationState === "awaiting_pass") && (
+              <>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white text-center">
+                  {abhaVerificationState === "awaiting_otp" ? "Enter OTP" : "Enter Password"}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                  {abhaVerificationState === "awaiting_otp" 
+                    ? "An OTP was sent to your registered mobile." 
+                    : "Enter your secure ABHA password."}
+                </p>
+                <input 
+                  type={abhaVerificationState === "awaiting_otp" ? "text" : "password"}
+                  value={abhaVerificationState === "awaiting_otp" ? otpInput : passInput}
+                  onChange={(e) => abhaVerificationState === "awaiting_otp" ? setOtpInput(e.target.value) : setPassInput(e.target.value)}
+                  placeholder={abhaVerificationState === "awaiting_otp" ? "123456" : "Password"}
+                  className="w-full text-center tracking-widest font-mono text-xl p-3 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+                <div className="flex gap-3 pt-2">
+                  <button onClick={() => setAbhaVerificationState("method_select")} className="flex-1 p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-colors">Back</button>
+                  <button onClick={handleVerifyAuth} disabled={isVerifying} className="flex-1 p-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors flex items-center justify-center">
+                    {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {abhaVerificationState === "requesting_consent" && (
+              <>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white text-center">Data Sharing Consent</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">Do you give consent to share your ABHA profile and health records with this hospital?</p>
+                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-xs text-slate-600 dark:text-slate-300 space-y-1 border dark:border-slate-700">
+                  <div className="flex justify-between"><span>Profile:</span> <strong>Name, Age, Gender</strong></div>
+                  <div className="flex justify-between"><span>Records:</span> <strong>Past prescriptions & labs</strong></div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button onClick={() => handleConsent(false)} className="flex-1 p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors">Deny</button>
+                  <button onClick={() => handleConsent(true)} className="flex-1 p-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors">I Consent</button>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      )}
 
       </form>
 

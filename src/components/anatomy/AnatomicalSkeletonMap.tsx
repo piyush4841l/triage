@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Check, 
   RotateCw, 
@@ -16,6 +16,7 @@ import {
 import { BodyRegionId, BODY_REGIONS, SubOrgan, SymptomItem } from "@/lib/anatomy-data";
 import { Language, translations } from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
+import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 import { SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
 
 interface AnatomicalSkeletonMapProps {
@@ -102,6 +103,18 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
       }
     }
   };
+
+
+  useEffect(() => {
+    if (!voiceGuide) return;
+    const activeVoice = (lang !== "en" && lang !== "hi") ? "en" : lang;
+    const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
+    
+    // When the UI transitions to the symptoms checklist, speak the modal instructions.
+    if (subStep === "symptoms") {
+      speakText(prompts.modal, activeVoice);
+    }
+  }, [subStep, voiceGuide, lang]);
 
   const handleClear = () => {
     onClearRegions();
