@@ -15,7 +15,7 @@ import {
   MapPin,
   LogOut
 } from "lucide-react";
-import { StoredToken, getStoredTokens, updateTokenStatus } from "@/lib/store";
+import { StoredToken, getStoredTokens, updateTokenStatus, subscribeToTokens } from "@/lib/store";
 import { Language, translations } from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
 
@@ -46,10 +46,19 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({
     refreshTokens();
     const handleUpdate = () => refreshTokens();
     window.addEventListener("opd_queue_updated", handleUpdate);
-    const interval = setInterval(refreshTokens, 3000);
+    
+    // Realtime Firebase & Multi-Tab Listener
+    const unsubscribeFirebase = subscribeToTokens((realtimeTokens) => {
+      setTokens(realtimeTokens);
+    });
+
+    // 2-Second Safety Auto-Refresh Poller (Zero Manual Refresh Needed)
+    const backupPoller = setInterval(refreshTokens, 2000);
+
     return () => {
       window.removeEventListener("opd_queue_updated", handleUpdate);
-      clearInterval(interval);
+      clearInterval(backupPoller);
+      unsubscribeFirebase();
     };
   }, []);
 

@@ -250,19 +250,6 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           {lang === "hi" ? "पंजीकरण" : "Registration"}
         </h2>
-        <button
-          type="button"
-          onClick={() => {
-            setPatientName("Amit Kumar");
-            setAge("28");
-            setGender("Male");
-            setPhone("9876543210");
-          }}
-          className="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-100/50 text-amber-800 text-[10px] font-bold rounded shadow-sm border border-amber-300 hover:bg-amber-200"
-        >
-          Fill Demo Data
-        </button>
-
       </div>
 
       <form 

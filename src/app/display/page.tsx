@@ -12,7 +12,7 @@ import {
   Users, 
   CalendarDays
 } from "lucide-react";
-import { getStoredTokens, StoredToken } from "@/lib/store";
+import { getStoredTokens, StoredToken, subscribeToTokens } from "@/lib/store";
 
 export default function DisplayPage() {
   const [tokens, setTokens] = useState<StoredToken[]>([]);
@@ -33,10 +33,19 @@ export default function DisplayPage() {
     updateDateTime();
 
     const timer = setInterval(updateDateTime, 1000);
-    const poller = setInterval(refreshTokens, 2500);
+    
+    // Realtime Firebase Listener
+    const unsubscribeFirebase = subscribeToTokens((realtimeTokens) => {
+      setTokens(realtimeTokens);
+    });
+
+    // 2-Second Safety Auto-Refresh Poller
+    const backupPoller = setInterval(refreshTokens, 2000);
+
     return () => {
       clearInterval(timer);
-      clearInterval(poller);
+      clearInterval(backupPoller);
+      unsubscribeFirebase();
     };
   }, []);
 
