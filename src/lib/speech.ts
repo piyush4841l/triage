@@ -70,7 +70,7 @@ export async function speakText(text: string, lang: Language = "en", onEnd?: () 
         if (onEnd) onEnd();
       };
       audio.play().catch(e => {
-        console.error("Audio playback error:", e);
+        console.warn("Audio playback error:", e);
         if (onEnd) onEnd();
       });
     } catch (e) {
@@ -107,7 +107,7 @@ export async function speakText(text: string, lang: Language = "en", onEnd?: () 
     }
   } catch (error) {
     if (activeSpeechToken !== currentToken) return;
-    console.error("Sarvam API failed, falling back to native:", error);
+    console.warn("Sarvam API failed, falling back to native:", error);
     
     // Fallback
     if ("speechSynthesis" in window) {
@@ -195,7 +195,7 @@ export class SpeechToTextController {
       this.recognition.start();
       return true;
     } catch (e) {
-      console.error("Failed to start speech recognition:", e);
+      console.warn("Failed to start speech recognition:", e);
       return false;
     }
   }

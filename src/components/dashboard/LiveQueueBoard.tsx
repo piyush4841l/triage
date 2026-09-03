@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { StoredToken, getStoredTokens, updateTokenStatus, subscribeToTokens } from "@/lib/store";
 import { Language, translations } from "@/lib/i18n";
-import { speakText } from "@/lib/speech";
+import { speakText, stopSpeaking } from "@/lib/speech";
 
 interface LiveQueueBoardProps {
   lang: Language;
@@ -61,6 +61,11 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({
       unsubscribeFirebase();
     };
   }, []);
+
+  const handleStopCalling = () => {
+    stopSpeaking();
+    setCallingTokenId(null);
+  };
 
   const handleCallPatient = (token: StoredToken) => {
     setCallingTokenId(token.id);
@@ -308,16 +313,19 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({
                   {/* Actions Column (3 options) */}
                   <div className="lg:col-span-4 flex flex-col justify-center space-y-2.5">
                     
-                    {/* Option 1: Call patient */}
-                    <button
-                      type="button"
-                      onClick={() => handleCallPatient(token)}
-                      disabled={isCalling}
-                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <Volume2 className={`w-4 h-4 ${isCalling ? "animate-spin text-emerald-200" : ""}`} />
-                      <span>{isCalling ? "Calling..." : "Call patient"}</span>
-                    </button>
+                    {/* Option 1: Call patient / Stop Calling */}
+                      <button
+                        type="button"
+                        onClick={() => isCalling ? handleStopCalling() : handleCallPatient(token)}
+                        className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all active:scale-95 ${
+                          isCalling 
+                            ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
+                            : "bg-emerald-600 hover:bg-emerald-500 text-white"
+                        }`}
+                      >
+                        <Volume2 className={`w-4 h-4 ${isCalling ? "text-red-100" : ""}`} />
+                        <span>{isCalling ? "Stop Calling" : "Call patient"}</span>
+                      </button>
 
                     {/* Option 2: View Past medical reports */}
                     <button
@@ -352,39 +360,79 @@ export const LiveQueueBoard: React.FC<LiveQueueBoardProps> = ({
       {/* OCR Records Modal */}
       {selectedTokenForOcr && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 sm:p-8 max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl space-y-6 text-slate-900 dark:text-white">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="font-extrabold text-lg flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600 dark:text-cyan-400" />
-                <span>Past Medical Records: {selectedTokenForOcr.input.patientName}</span>
+              <h3 className="font-extrabold text-2xl flex items-center gap-3">
+                <Activity className="w-8 h-8 text-blue-600 dark:text-cyan-400" />
+                <span>Patient Deep Dive: {selectedTokenForOcr.input.patientName}</span>
               </h3>
               <button
                 onClick={() => setSelectedTokenForOcr(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-3xl font-bold px-2"
               >
-                ✕
+                &times;
               </button>
             </div>
+  
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+              {/* Left Column: Triage & OCR Data */}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-bold text-lg text-emerald-600 dark:text-emerald-400 mb-2">Triage Data</h4>
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 text-sm space-y-2">
+                    <p><strong>Priority Level:</strong> <span className="font-mono bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded">{selectedTokenForOcr.result.priorityLevel}</span></p>
+                    <p><strong>Triage Score:</strong> {selectedTokenForOcr.result.totalScore}</p>
+                    <p><strong>Pain Severity:</strong> {selectedTokenForOcr.input.painSeverity}/10</p>
+                    <p><strong>Duration:</strong> {selectedTokenForOcr.input.duration}</p>
+                    <p><strong>Symptoms:</strong> {selectedTokenForOcr.input.selectedSymptoms?.join(', ') || 'None reported'}</p>
+                  </div>
+                </div>
 
-            <div className="space-y-3 text-xs sm:text-sm">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <span className="font-bold text-blue-600 dark:text-cyan-400 block mb-1">OCR Extracted Prescription Summary:</span>
-                <p className="text-slate-700 dark:text-slate-300">
-                  {selectedTokenForOcr.ocrDetails?.rawText || "Hypertension on Telmisartan 40mg. Mild tachycardia noted in previous visit. No documented severe allergies."}
-                </p>
+                {selectedTokenForOcr.ocrDetails?.rawText && (
+                  <div>
+                    <h4 className="font-bold text-lg text-emerald-600 dark:text-emerald-400 mb-2 pt-2">OCR Extracted Prescription</h4>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 text-sm">
+                      <p className="whitespace-pre-wrap">{selectedTokenForOcr.ocrDetails.rawText}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+  
+              {/* Right Column: ABHA Historical Data */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-xl text-blue-600 dark:text-cyan-400 flex items-center gap-2">
+                  <CheckCircle2 className="w-6 h-6" />
+                  ABDM / ABHA Verified Historical Records
+                </h4>
+                
+                {selectedTokenForOcr.mockAbhaProfile?.reportImage ? (
+                  <div className="rounded-xl overflow-hidden border-4 border-emerald-500/30 bg-white shadow-inner">
+                    <img 
+                      src={selectedTokenForOcr.mockAbhaProfile.reportImage} 
+                      alt="Historical Report" 
+                      className="w-full h-auto object-contain cursor-zoom-in"
+                      onClick={() => window.open(selectedTokenForOcr.mockAbhaProfile?.reportImage, '_blank')}
+                      title="Click to expand"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-3">
+                    <AlertOctagon className="w-8 h-8 opacity-50" />
+                    <p>No past medical records found for this patient on the ABDM network.</p>
+                  </div>
+                )}
               </div>
             </div>
-
+  
             <button
               onClick={() => setSelectedTokenForOcr(null)}
-              className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-200 dark:border-slate-700"
+              className="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold text-sm border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition-all"
             >
-              Close
+              Close Dashboard
             </button>
           </div>
         </div>
       )}
-
     </div>
   );
 };

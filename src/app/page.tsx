@@ -257,6 +257,7 @@ export default function KioskPage() {
       },
       status: "WAITING",
       createdAt: new Date().toISOString(),
+      mockAbhaProfile: (registrationData as any).mockAbhaProfile,
       ocrDetails: uploadedOcr
         ? {
             diagnoses: uploadedOcr.diagnoses,
@@ -410,8 +411,8 @@ export default function KioskPage() {
           </aside>
 
           {/* Right Main Content Panel */}
-          <section className="flex-1 min-h-0 p-2 sm:p-4 flex justify-center items-center overflow-hidden">
-            <div className="w-full max-w-5xl my-auto animate-custom-slide-in">
+          <section className="flex-1 min-h-0 p-2 sm:p-4 overflow-y-auto overflow-x-hidden relative scroll-smooth">
+              <div className="w-full max-w-5xl mx-auto min-h-full flex flex-col justify-center py-4 animate-custom-slide-in">
               {/* Step 1: Patient Registration & Identification */}
               {currentStep === 1 && (
                 <PatientRegistration

@@ -12,6 +12,7 @@ export interface StoredToken {
   createdAt: string;
   calledAt?: string;
   completedAt?: string;
+  mockAbhaProfile?: any;
   ocrDetails?: {
     diagnoses: string[];
     medications: string[];

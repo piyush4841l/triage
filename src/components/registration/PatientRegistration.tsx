@@ -14,6 +14,7 @@ import {
   Keyboard
 , Loader2 } from "lucide-react";
 import { Language, translations } from "@/lib/i18n";
+import { MOCK_ABHA_DATABASE } from "@/lib/mock-abha";
 import { speakText, globalSpeechRecognizer } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 import { VirtualKeypad } from "@/components/kiosk/VirtualKeypad";
@@ -26,6 +27,7 @@ export interface PatientRegistrationData {
   phone: string;
   abhaId?: string;
   aadhaarId?: string;
+  mockAbhaProfile?: any;
 }
 
 interface PatientRegistrationProps {
@@ -103,12 +105,23 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const handleConsent = (approved: boolean) => {
     if (approved) {
       setAbhaVerificationState("verified");
-      speakText(lang === "hi" ? "सत्यापन सफल रहा। आपका विवरण भर दिया गया है।" : "Verification successful. Your details have been auto-filled.", lang);
-      // Auto-fill mock data
-      setPatientName("Rahul Sharma");
-      setAge("34");
-      setGender("Male");
-      setPhone("9876543210");
+      speakText(lang === "hi" ? "सत्यापन सफल। आपका विवरण स्वतः भर गया है।" : "Verification successful. Your details have been auto-filled.", lang);
+      
+      const strippedAbha = abhaId.replace(/\D/g, "");
+      const profile = MOCK_ABHA_DATABASE[strippedAbha];
+      
+      if (profile) {
+        setPatientName(profile.name);
+        setAge(profile.age.toString());
+        setGender(profile.gender);
+        setPhone(profile.phone);
+      } else {
+        // Auto-fill mock data for unknown ABHA
+        setPatientName("Rahul Sharma");
+        setAge("34");
+        setGender("Male");
+        setPhone("9876543210");
+      }
     } else {
       setAbhaVerificationState("idle");
     }
@@ -233,6 +246,9 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
     setErrors({});
     const effectiveAbha = abhaId.trim() || (cleanAadhaar ? `AADHAAR-${cleanAadhaar}` : undefined);
+        const strippedAbha = effectiveAbha ? effectiveAbha.replace(/\D/g, "") : "";
+    const profile = MOCK_ABHA_DATABASE[strippedAbha];
+
     onProceed({
       patientName: patientName.trim(),
       age: ageNum,
@@ -240,6 +256,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
       phone: cleanPhone,
       abhaId: effectiveAbha,
       aadhaarId: cleanAadhaar,
+      mockAbhaProfile: profile || undefined,
     });
   };
 

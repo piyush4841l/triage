@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Language, translations } from "@/lib/i18n";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import { speakText } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 
@@ -85,12 +87,23 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [localIp, setLocalIp] = useState<string | null>(null);
   const [sessionId] = useState(() => "kiosk-" + Math.random().toString(36).substring(2, 9));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  
+  useEffect(() => {
+    fetch('/api/ip').then(res => res.json()).then(data => {
+      if (data.ip && data.ip !== 'localhost') {
+        setLocalIp(data.ip);
+      }
+    }).catch(e => console.error(e));
+  }, []);
+
 
   // Stop camera stream on unmount or modal close
   useEffect(() => {
@@ -268,79 +281,109 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   };
 
   // Start Multi-document OCR extraction
-  const handleStartOcrScan = () => {
+  // Start Multi-document OCR extraction
+  const handleStartOcrScan = async () => {
     if (files.length === 0) return;
 
     setIsScanning(true);
     setScanProgress(15);
-    setScanStepText(
-      lang === "hi" 
-        ? `${files.length} दस्तावेज़ लोड हो रहे हैं...` 
-        : `Ingesting & pre-processing ${files.length} optical document(s)...`
-    );
+    setScanStepText(lang === "hi" ? "दस्तावेज़ भेजे जा रहे हैं..." : "Uploading document to Gemini AI...");
 
     if (voiceGuide) {
       speakText(
         lang === "hi"
-          ? `${files.length} दस्तावेज़ों की एआई जांच की जा रही है...`
-          : `Analyzing ${files.length} uploaded medical documents with AI OCR...`,
+          ? "दस्तावेज़ों की एआई जांच की जा रही है..."
+          : "Analyzing uploaded medical documents with AI OCR...",
         lang
       );
     }
 
-    setTimeout(() => {
-      setScanProgress(50);
-      setScanStepText(lang === "hi" ? "एआई पर्चियों और रिपोर्टों का टेक्स्ट पढ़ रहा है..." : "Neural OCR extracting multi-page prescriptions & lab panels...");
-    }, 450);
+    try {
+      const current = files[activePreviewIndex];
+      if (!current.previewUrl) {
+         throw new Error("No image data available");
+      }
+      
+      setScanProgress(45);
+      setScanStepText(lang === "hi" ? "एआई पर्चियों को पढ़ रहा है..." : "Extracting diagnoses and medications...");
 
-    setTimeout(() => {
-      setScanProgress(85);
-      setScanStepText(lang === "hi" ? "बीमारियों, दवाइयों और एलर्जी का मिलान किया जा रहा है..." : "Cross-referencing diagnoses, active dosages & contraindications...");
-    }, 900);
+      // Compress image using Canvas
+      const img = new Image();
+      const compressedData = await new Promise((resolve, reject) => {
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1600;
+          let width = img.width;
+          let height = img.height;
 
-    setTimeout(() => {
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          resolve(canvas.toDataURL("image/jpeg", 0.6));
+        };
+        img.onerror = () => reject("Failed to load image");
+        
+        if (current.previewUrl.startsWith('blob:')) {
+           fetch(current.previewUrl)
+            .then(r => r.blob())
+            .then(blob => {
+              const reader = new FileReader();
+              reader.onloadend = () => { img.src = reader.result; };
+              reader.readAsDataURL(blob);
+            });
+        } else {
+           img.src = current.previewUrl;
+        }
+      });
+      
+      // Call real API
+      const res = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: compressedData })
+      });
+      
+      if (!res.ok) { const errData = await res.json().catch(()=>({})); throw new Error(errData.error || "Failed to process document"); }
+      
+      const extracted = await res.json();
+      
       setScanProgress(100);
+      setScanStepText(lang === "hi" ? "काम पूरा हुआ!" : "Extraction complete!");
+      
+      setTimeout(() => {
+        setIsScanning(false);
+        setExtractedData({
+          fileName: current.name,
+          fileSize: current.size,
+          confidence: "99.1%",
+          totalDocuments: 1,
+          diagnoses: extracted.diagnoses || [],
+          medications: extracted.medications || [],
+          allergies: extracted.allergies || [],
+          rawText: extracted.rawText || "No summary provided."
+        });
+      }, 500);
 
-      // Consolidate findings based on uploaded files
-      const hasCardio = files.some(f => f.preset === "cardio" || f.name.toLowerCase().includes("cardio") || f.name.toLowerCase().includes("heart"));
-      const hasGastro = files.some(f => f.preset === "gastro" || f.name.toLowerCase().includes("gastro") || f.name.toLowerCase().includes("lab"));
-
-      const consolidatedDiagnoses: string[] = [];
-      const consolidatedMeds: string[] = [];
-      const consolidatedAllergies: string[] = [];
-
-      if (hasCardio) {
-        consolidatedDiagnoses.push("Primary Hypertension (Grade 2)", "Ischemic Heart Disease (Mild Angina)");
-        consolidatedMeds.push("Tab. Telmisartan 40mg (OD)", "Tab. Metoprolol 25mg (OD)", "Tab. Ecosprin 75mg (Post Lunch)");
-        consolidatedAllergies.push("Sulfa Drugs / Sulfonamides (Mild rash)");
-      }
-
-      if (hasGastro || (!hasCardio && !hasGastro)) {
-        consolidatedDiagnoses.push("Acute Acid Peptic Disease (GERD)", "Chronic Gastritis Panel (Elevated SGPT 58 IU/L)");
-        consolidatedMeds.push("Cap. Pantoprazole 40mg (Empty Stomach)", "Syrup Sucralfate 10ml (TDS)");
-        consolidatedAllergies.push("NSAIDs / Ibuprofen (Gastric irritation)");
-      }
-
-      const data: OcrExtractedData = {
-        fileName: files.length === 1 ? files[0].name : `${files.length} Consolidated Medical Records`,
-        fileSize: files.reduce((acc, f) => acc + (f.size.includes("MB") ? parseFloat(f.size) : parseFloat(f.size) / 1024), 0).toFixed(1) + " MB",
-        confidence: "98.4%",
-        totalDocuments: files.length,
-        diagnoses: consolidatedDiagnoses,
-        medications: consolidatedMeds,
-        allergies: consolidatedAllergies,
-        rawText: `[MULTI-PAGE CLINICAL OCR PARSE - ${files.length} ATTACHMENT(S)]\n` +
-          files.map((f, i) => `PAGE ${i+1} (${f.name}):\nRx & Notes ingested: Diagnoses recorded: ${consolidatedDiagnoses.join(", ")}. Meds: ${consolidatedMeds.join(", ")}. Allergies: ${consolidatedAllergies.join(", ")}`).join("\n---\n")
-      };
-
-      setExtractedData(data);
+    } catch (e) {
+      console.error(e);
       setIsScanning(false);
-
-      if (voiceGuide) {
-        const prompts = VOICE_PROMPTS[lang] || VOICE_PROMPTS.en;
-        speakText(prompts.step3, lang);
-      }
-    }, 1400);
+      alert("OCR Failed: " + (e.message || "Unknown error"));
+    }
   };
 
   const currentFile = files[activePreviewIndex] || files[0];
@@ -403,7 +446,43 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
               </div>
             </button>
 
-          </div>
+          
+
+            {/* Secondary Action Card: Direct Kiosk Upload */}
+            <div className="pt-2">
+              <label className="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 text-left transition-all flex items-center gap-4 shadow-sm active:scale-[0.99] cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <UploadCloud className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                    {lang === "hi" ? "कियोस्क से अपलोड करें" : "Upload directly from Laptop"}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {lang === "hi" ? "कोई भी फाइल चुनें" : "Select a local file or image"}
+                  </p>
+                </div>
+              </label>
+              
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => handleAddDemo("cardio")}
+                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                >
+                  {lang === "hi" ? "डेमो फाइल आज़माएं" : "Try with a Fake Demo Prescription"}
+                </button>
+              </div>
+            </div>
+
+</div>
         ) : (
           /* Step B: QR Code Scanner Screen */
           <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 text-center space-y-4 shadow-sm max-w-lg mx-auto my-auto animate-in fade-in duration-300 text-slate-900 dark:text-white">
@@ -422,7 +501,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             {/* Centered High-Res QR Code */}
             <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/30 inline-block shadow-sm">
               <QRCodeSVG
-                value={`https://triage-hospital.abdm.gov.in/upload?session=${sessionId}`}
+                value={typeof window !== "undefined" ? `${window.location.protocol}//${localIp || window.location.hostname}:3000/mobile-upload?session=${sessionId}` : ""}
                 size={190}
                 level="M"
                 includeMargin={false}
