@@ -39,6 +39,8 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
 
     if (!name.trim()) {
       newErrors.name = lang === "hi" ? "कृपया नाम दर्ज करें" : "Name is required";
+    } else if (/[0-9\u0966-\u096F]/.test(name)) {
+      newErrors.name = lang === "hi" ? "नाम में संख्याएं मान्य नहीं हैं" : "Name cannot contain numbers";
     }
     if (!staffId.trim()) {
       newErrors.staffId = lang === "hi" ? "कृपया मेडिकल आईडी दर्ज करें" : "Medical ID is required";
@@ -53,12 +55,18 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
     }
 
     setErrors({});
-    onLogin({
+    const sessionData: DoctorStaffSession = {
       name: name.trim(),
       staffId: staffId.trim(),
       department: "All Departments",
       role: "Doctor",
-    });
+    };
+    try {
+      localStorage.setItem("doctor_session", JSON.stringify(sessionData));
+    } catch (err) {
+      // ignore
+    }
+    onLogin(sessionData);
   };
 
   return (
@@ -79,13 +87,20 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
           <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{lang === "hi" ? "नाम" : "Name"}</span>
-            <span className="text-red-500 font-bold">*</span>
           </label>
           <input
             type="text"
             value={name}
+            onKeyDown={(e) => {
+              // Block number keys immediately
+              if (/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onChange={(e) => {
-              setName(e.target.value);
+              // Strip numbers if pasted or entered via IME/mobile keyboards
+              const cleanVal = e.target.value.replace(/[0-9\u0966-\u096F]/g, "");
+              setName(cleanVal);
               if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
             }}
             placeholder="e.g. Dr. Arvind Sharma"
@@ -108,7 +123,6 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
           <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <BadgeCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{lang === "hi" ? "मेडिकल आईडी" : "Medical ID"}</span>
-            <span className="text-red-500 font-bold">*</span>
           </label>
           <input
             type="text"
@@ -137,7 +151,6 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
           <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{lang === "hi" ? "पासवर्ड" : "Password"}</span>
-            <span className="text-red-500 font-bold">*</span>
           </label>
           <div className="relative">
             <input

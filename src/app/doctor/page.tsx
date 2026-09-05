@@ -18,12 +18,33 @@ export default function DoctorPage() {
   // Authenticated Doctor/Staff Session State
   const [session, setSession] = useState<DoctorStaffSession | null>(null);
 
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("doctor_session");
+      if (saved) {
+        setSession(JSON.parse(saved));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   const handleLogin = (s: DoctorStaffSession) => {
     setSession(s);
+    try {
+      localStorage.setItem("doctor_session", JSON.stringify(s));
+    } catch (e) {
+      // ignore
+    }
   };
 
   const handleLogout = () => {
     setSession(null);
+    try {
+      localStorage.removeItem("doctor_session");
+    } catch (e) {
+      // ignore
+    }
   };
 
   return (

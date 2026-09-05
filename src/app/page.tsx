@@ -7,7 +7,7 @@ import { PatientRegistration, PatientRegistrationData } from "@/components/regis
 import { LandingScreen } from "@/components/kiosk/LandingScreen";
 import { AnatomicalSkeletonMap } from "@/components/anatomy/AnatomicalSkeletonMap";
 import { OrganDrillDownModal, SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
-import { DocumentUpload, OcrExtractedData } from "@/components/ocr/DocumentUpload";
+import { DocumentUpload, OcrExtractedData, UploadedFileItem } from "@/components/ocr/DocumentUpload";
 import { TokenReceiptModal } from "@/components/token/TokenReceiptModal";
 import { WhatsAppDispatchModal } from "@/components/token/WhatsAppDispatchModal";
 import { EmergencyFastTrackModal } from "@/components/emergency/EmergencyFastTrackModal";
@@ -128,10 +128,8 @@ export default function KioskPage() {
   const [showIdleWarning, setShowIdleWarning] = useState(false);
 
   useEffect(() => {
-    if (currentStep === 0 || currentStep === 4) {
-      setShowIdleWarning(false);
-      return;
-    }
+    // Dedicated 1-minute auto-reset with 10s prompt is managed directly inside TokenReceiptModal
+    if (currentStep === 4) return;
 
     let warningTimer: NodeJS.Timeout;
     let resetTimer: NodeJS.Timeout;
@@ -182,6 +180,20 @@ export default function KioskPage() {
 
   // Handlers
   const handleRegistrationProceed = (data: PatientRegistrationData) => {
+    if (
+      data.phone !== registrationData.phone ||
+      data.patientName !== registrationData.patientName ||
+      data.abhaId !== registrationData.abhaId
+    ) {
+      setSelectedRegions([]);
+      setSymptomData({
+        selectedOrgans: [],
+        selectedSymptoms: [],
+        isDontKnow: false,
+        painSeverity: 5,
+        duration: "few_days",
+      });
+    }
     setRegistrationData(data);
     setCurrentStep(2);
   };
@@ -214,16 +226,16 @@ export default function KioskPage() {
     setCurrentStep(3); // move to OCR upload
   };
 
-  const handleOcrProceed = (extracted?: OcrExtractedData) => {
+  const handleOcrProceed = (extracted?: OcrExtractedData, files?: UploadedFileItem[]) => {
     if (extracted) setOcrData(extracted);
-    generateFinalToken(extracted);
+    generateFinalToken(extracted, files);
   };
 
   const handleOcrSkip = () => {
     generateFinalToken();
   };
 
-  const generateFinalToken = (uploadedOcr?: OcrExtractedData) => {
+  const generateFinalToken = (uploadedOcr?: OcrExtractedData, files?: UploadedFileItem[]) => {
     const triageResult = computeTriage({
       patientName: registrationData.patientName,
       age: registrationData.age,
@@ -258,6 +270,14 @@ export default function KioskPage() {
       status: "WAITING",
       createdAt: new Date().toISOString(),
       mockAbhaProfile: (registrationData as any).mockAbhaProfile,
+      uploadedDocuments: files && files.length > 0
+        ? files.map(f => ({
+            name: f.name,
+            previewUrl: f.previewUrl || "",
+            size: f.size,
+            type: f.type,
+          }))
+        : undefined,
       ocrDetails: uploadedOcr
         ? {
             diagnoses: uploadedOcr.diagnoses,
@@ -370,7 +390,7 @@ export default function KioskPage() {
           aria-hidden="true"
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-25 dark:opacity-20 transition-opacity duration-500"
           style={{
-            backgroundImage: `url('/images/doctor-bg.jpg')`,
+            backgroundImage: `url('/images/doctor-patient-bg.jpg')`,
             backgroundAttachment: "fixed",
           }}
         />
@@ -381,7 +401,25 @@ export default function KioskPage() {
         <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-center relative z-10 overflow-hidden">
           <LandingScreen 
             lang={lang}
-            onStartReal={() => setCurrentStep(1)}
+            onStartReal={() => {
+              setRegistrationData({
+                patientName: "",
+                age: 0,
+                gender: "Male",
+                phone: "",
+              });
+              setSelectedRegions([]);
+              setSymptomData({
+                selectedOrgans: [],
+                selectedSymptoms: [],
+                isDontKnow: false,
+                painSeverity: 5,
+                duration: "few_days",
+              });
+              setOcrData(null);
+              setGeneratedToken(null);
+              setCurrentStep(1);
+            }}
             onStartDemo={() => {
               setRegistrationData({
                 patientName: "Ramesh Kumar",
@@ -390,6 +428,16 @@ export default function KioskPage() {
                 phone: "9876543210",
                 abhaId: "14-8890-4432-1102"
               });
+              setSelectedRegions([]);
+              setSymptomData({
+                selectedOrgans: [],
+                selectedSymptoms: [],
+                isDontKnow: false,
+                painSeverity: 5,
+                duration: "few_days",
+              });
+              setOcrData(null);
+              setGeneratedToken(null);
               setCurrentStep(1);
             }}
           />
@@ -411,8 +459,8 @@ export default function KioskPage() {
           </aside>
 
           {/* Right Main Content Panel */}
-          <section className="flex-1 min-h-0 p-2 sm:p-4 overflow-y-auto overflow-x-hidden relative scroll-smooth">
-              <div className="w-full max-w-5xl mx-auto min-h-full flex flex-col justify-center py-4 animate-custom-slide-in">
+          <section className="flex-1 min-h-0 p-2 sm:p-3 overflow-y-auto overflow-x-hidden relative scroll-smooth">
+              <div className="w-full max-w-5xl mx-auto min-h-full flex flex-col justify-center py-1 sm:py-2 animate-custom-slide-in">
               {/* Step 1: Patient Registration & Identification */}
               {currentStep === 1 && (
                 <PatientRegistration

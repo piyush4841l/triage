@@ -10,9 +10,10 @@ import {
   ShieldAlert,
   User,
   CreditCard,
+  Fingerprint,
   Phone
 } from "lucide-react";
-import { Language, translations } from "@/lib/i18n";
+import { Language, translations, getIdentityLabels } from "@/lib/i18n";
 import { computeTriage } from "@/lib/triage";
 import { addToken, StoredToken } from "@/lib/store";
 import { globalSpeechRecognizer, speakText } from "@/lib/speech";
@@ -34,6 +35,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   onTokenGenerated,
 }) => {
   const t = translations[lang] || translations.en;
+  const idLabels = getIdentityLabels(lang);
   const [patientName, setPatientName] = useState("");
   const [abhaId, setAbhaId] = useState("");
   const [aadhaarId, setAadhaarId] = useState("");
@@ -48,11 +50,13 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   const validate = () => {
     const e: Record<string, string> = {};
     if (!patientName.trim()) {
-      e.name = lang === "hi" ? "कृपया पूरा नाम दर्ज करें" : "Full name is required";
+      e.name = t.pleaseEnterName;
+    } else if (/[0-9\u0966-\u096F]/.test(patientName)) {
+      e.name = lang === "hi" ? "नाम में संख्याएँ नहीं हो सकतीं" : "Patient name cannot contain numbers";
     }
     const cleanPhone = phone.replace(/\D/g, "");
     if (!cleanPhone || cleanPhone.length !== 10) {
-      e.phone = lang === "hi" ? "कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें" : "Valid 10-digit mobile number required";
+      e.phone = t.pleaseEnterPhone;
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -175,8 +179,8 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
 
         {/* Patient Details in Emergency Section */}
         <div className="space-y-3 pt-1">
-          <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-700 dark:text-red-400 block">
-            Emergency Patient Details
+          <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-700 dark:text-red-400 block text-center">
+            {idLabels.patientDetailsTitle}
           </label>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -185,24 +189,29 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
             <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <User className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.fullName}</span> <span className="text-red-500">*</span>
+                <span>{t.fullName}</span>
               </label>
               <input
                 type="text"
                 value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                placeholder="e.g. Ramesh Kumar"
+                onKeyDown={(e) => {
+                  if (/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(e) => setPatientName(e.target.value.replace(/[0-9\u0966-\u096F]/g, ""))}
+                placeholder={t.fullNamePlaceholder}
                 className={`w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border ${errors.name ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-red-500"} text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-sm`}
               />
               {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
 
-                        {/* 2. ABHA ID / Aadhaar Toggle */}
+            {/* 2. ABHA ID / Aadhaar Toggle */}
             <div className="sm:col-span-2 space-y-2 mt-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                 <CreditCard className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{lang === "hi" ? "पहचान पत्र (ABHA / आधार)" : "Identity Verification (ABHA / Aadhaar)"}</span>
-                <span className="text-slate-500 font-normal ml-1">(Optional)</span>
+                <span>{idLabels.identityTitle}</span>
+                <span className="text-slate-500 font-normal ml-1">({t.optionalTag})</span>
               </label>
 
               {/* Toggle buttons */}
@@ -220,7 +229,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                   }`}
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>{lang === "hi" ? "आभा आईडी (ABHA ID)" : "ABHA ID"}</span>
+                  <span>{idLabels.abhaTab}</span>
                 </button>
 
                 <button
@@ -236,7 +245,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                   }`}
                 >
                   <Fingerprint className="w-4 h-4" />
-                  <span>{lang === "hi" ? "आधार नंबर (Aadhaar)" : "Aadhaar Number"}</span>
+                  <span>{idLabels.aadhaarTab}</span>
                 </button>
               </div>
 
@@ -254,7 +263,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                       else setAbhaId(`${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}-${digits.slice(10, 14)}`);
                     }}
                     maxLength={17}
-                    placeholder="14-digit ABHA ID"
+                    placeholder={idLabels.abhaInputLabel}
                     className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
@@ -270,7 +279,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                       setAadhaarId(digits);
                     }}
                     maxLength={12}
-                    placeholder="12-digit Aadhaar Number"
+                    placeholder={idLabels.aadhaarInputLabel}
                     className="w-full h-11 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
@@ -281,14 +290,14 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
             <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-1">
                 <Phone className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                <span>{t.phone}</span> <span className="text-red-500">*</span>
+                <span>{t.phone}</span>
               </label>
               <div className="relative">
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="10-digit Mobile No."
+                  placeholder={t.phonePlaceholder}
                   className={`w-full h-11 pl-3.5 pr-10 rounded-xl bg-slate-50 dark:bg-slate-950/80 border ${errors.phone ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-red-500"} text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none text-sm`}
                 />
                 <button
@@ -299,7 +308,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
                       ? "bg-red-600 text-white animate-pulse"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
-                  title="Speak Phone Number"
+                  title={t.voiceInputTooltip}
                 >
                   {isListeningPhone ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
                 </button>
@@ -323,7 +332,7 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
           disabled={isGenerating}
           className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-sm sm:text-base shadow-md shadow-red-500/25 active:scale-[0.99] transition-all flex items-center justify-center space-x-2"
         >
-          <span>{isGenerating ? "Dispatching Token..." : t.generateEmergencyToken}</span>
+          <span>{isGenerating ? t.analyzingDocument : t.generateEmergencyToken}</span>
           <ArrowRight className="w-5 h-5" />
         </button>
 

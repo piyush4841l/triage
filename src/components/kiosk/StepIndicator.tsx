@@ -214,18 +214,20 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
         <div className="bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 transition-all duration-300 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-              Patient Profile
+              {translations[lang]?.patientProfile || "Patient Profile"}
             </span>
             {isDetailsFilled && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                Verified
+                {translations[lang]?.verified || "Verified"}
               </span>
             )}
           </div>
           
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Name:</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {translations[lang]?.fullName || "Name"}:
+              </span>
               <span className={`text-sm font-bold truncate max-w-[150px] ${
                 isDetailsFilled ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 italic font-medium"
               }`}>
@@ -235,7 +237,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
             <div className="flex items-baseline justify-between gap-2 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                 <CreditCard className="w-3.5 h-3.5 text-slate-400" />
-                ABHA:
+                {translations[lang]?.maskedAbha || "ABHA"}:
               </span>
               <span className={`text-xs font-mono font-bold tracking-wider ${
                 isDetailsFilled ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 italic font-normal"
@@ -252,7 +254,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
           <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-700/80">
             <ListChecks className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Activity Status
+              {translations[lang]?.activityStatus || "Activity Status"}
             </span>
           </div>
 
@@ -333,7 +335,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/50 shadow-sm hover:shadow-md transition-all text-xs font-bold active:scale-95 group"
             >
               <RotateCcw className="w-3.5 h-3.5 group-hover:-rotate-90 transition-transform duration-300 text-red-500" />
-              <span>Cancel / Reset to Home</span>
+              <span>{translations[lang]?.cancelResetHome || "Cancel / Reset to Home"}</span>
             </button>
           )}
         </div>

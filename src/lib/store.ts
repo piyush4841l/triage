@@ -13,6 +13,12 @@ export interface StoredToken {
   calledAt?: string;
   completedAt?: string;
   mockAbhaProfile?: any;
+  uploadedDocuments?: {
+    name: string;
+    previewUrl: string;
+    size?: string;
+    type?: string;
+  }[];
   ocrDetails?: {
     diagnoses: string[];
     medications: string[];
@@ -46,17 +52,46 @@ export function saveStoredTokens(tokens: StoredToken[]) {
     window.dispatchEvent(new Event("opd_queue_updated"));
   } catch (e) {
     console.error("Failed to save tokens:", e);
+    // Quota safety: sanitize large data URLs and retry
+    try {
+      const sanitized = tokens.map((t) => ({
+        ...t,
+        uploadedDocuments: t.uploadedDocuments?.map((d) => ({
+          ...d,
+          previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
+            ? "/images/tanmay-report.jpg" 
+            : d.previewUrl,
+        })),
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+      window.dispatchEvent(new Event("opd_queue_updated"));
+    } catch (retryErr) {
+      console.error("Critical quota error saving tokens:", retryErr);
+    }
   }
 }
 
 export function addToken(token: StoredToken): StoredToken[] {
   const existing = getStoredTokens();
-  const updated = token.result.priorityTier === "RED" ? [token, ...existing] : [...existing, token];
+  // Filter out any duplicate token with the same ID
+  const withoutCurrent = existing.filter((t) => t.id !== token.id);
+  const updated = token.result?.priorityTier === "RED" 
+    ? [token, ...withoutCurrent] 
+    : [...withoutCurrent, token];
+  
   saveStoredTokens(updated);
 
-  // Realtime Cloud Sync via Firebase Firestore (sanitize undefined fields)
+  // Realtime Cloud Sync via Firebase Firestore (sanitize undefined fields and oversize base64)
   try {
     const cleanToken = JSON.parse(JSON.stringify(token));
+    if (cleanToken.uploadedDocuments) {
+      cleanToken.uploadedDocuments = cleanToken.uploadedDocuments.map((d: any) => ({
+        ...d,
+        previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
+          ? "/images/tanmay-report.jpg" 
+          : d.previewUrl,
+      }));
+    }
     const docRef = doc(db, "tokens", token.id);
     setDoc(docRef, cleanToken).catch((err) => console.error("Firestore setDoc error:", err));
   } catch (e) {
@@ -84,6 +119,14 @@ export function updateTokenStatus(tokenId: string, newStatus: QueueStatus): Stor
     const targetToken = updated.find((t) => t.id === tokenId || t.result.tokenId === tokenId);
     if (targetToken) {
       const cleanToken = JSON.parse(JSON.stringify(targetToken));
+      if (cleanToken.uploadedDocuments) {
+        cleanToken.uploadedDocuments = cleanToken.uploadedDocuments.map((d: any) => ({
+          ...d,
+          previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
+            ? "/images/tanmay-report.jpg" 
+            : d.previewUrl,
+        }));
+      }
       const docRef = doc(db, "tokens", targetToken.id);
       setDoc(docRef, cleanToken).catch((err) => console.error("Firestore setDoc update error:", err));
     }
@@ -131,14 +174,42 @@ export function subscribeToTokens(onUpdate: (tokens: StoredToken[]) => void): ()
         });
 
         if (remoteTokens.length > 0) {
-          // Sort tokens: Emergency RED first, then newest creation date
-          remoteTokens.sort((a, b) => {
-            if (a.result.priorityTier === "RED" && b.result.priorityTier !== "RED") return -1;
-            if (b.result.priorityTier === "RED" && a.result.priorityTier !== "RED") return 1;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          // IMPORTANT: Merge remote tokens with local tokens so that locally added patients are NEVER wiped out
+          const localTokens = getStoredTokens();
+          const tokenMap = new Map<string, StoredToken>();
+
+          // First populate with all local tokens
+          localTokens.forEach((t) => {
+            if (t && t.id) tokenMap.set(t.id, t);
           });
-          saveStoredTokens(remoteTokens);
-          onUpdate(remoteTokens);
+
+          // Merge in remote tokens: update status or insert if absent
+          remoteTokens.forEach((r) => {
+            if (!r || !r.id) return;
+            const existing = tokenMap.get(r.id);
+            if (!existing) {
+              tokenMap.set(r.id, r);
+            } else {
+              tokenMap.set(r.id, {
+                ...existing,
+                status: r.status || existing.status,
+                calledAt: r.calledAt || existing.calledAt,
+                completedAt: r.completedAt || existing.completedAt,
+                uploadedDocuments: existing.uploadedDocuments || r.uploadedDocuments,
+              });
+            }
+          });
+
+          const mergedTokens = Array.from(tokenMap.values());
+          // Sort tokens: Emergency RED first, then newest creation date
+          mergedTokens.sort((a, b) => {
+            if (a.result?.priorityTier === "RED" && b.result?.priorityTier !== "RED") return -1;
+            if (b.result?.priorityTier === "RED" && a.result?.priorityTier !== "RED") return 1;
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+          });
+
+          saveStoredTokens(mergedTokens);
+          onUpdate(mergedTokens);
         }
       },
       (error) => {

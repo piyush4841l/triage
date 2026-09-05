@@ -14,7 +14,15 @@ import {
   Layers
 } from "lucide-react";
 import { BodyRegionId, BODY_REGIONS, SubOrgan, SymptomItem } from "@/lib/anatomy-data";
-import { Language, translations } from "@/lib/i18n";
+import { 
+  Language, 
+  translations, 
+  getLocalizedOrganName, 
+  getLocalizedSymptomName, 
+  getLocalizedColloquialRegion, 
+  formatPage, 
+  formatSymptomsRange 
+} from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 import { SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
@@ -45,12 +53,12 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
   const t = translations[lang] || translations.en;
   const [view, setView] = useState<"front" | "back">("front");
   const [hoveredRegion, setHoveredRegion] = useState<BodyRegionId | null>(null);
-  const [subStep, setSubStep] = useState<"map" | "organs" | "symptoms" | "discomfort">(() => {
-    if (selectedRegions.length > 0) {
-      return "discomfort";
-    }
-    return "map";
-  });
+  const [subStep, setSubStep] = useState<"map" | "organs" | "symptoms" | "discomfort">("map");
+  const mountTimeRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    mountTimeRef.current = Date.now();
+  }, []);
 
   // Symptom details local state synced with symptomData
   const [selectedOrgans, setSelectedOrgans] = useState<string[]>(symptomData.selectedOrgans || []);
@@ -94,10 +102,19 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
     if (regionData && voiceGuide) {
       const isNowSelected = !selectedRegions.includes(regionId);
       if (isNowSelected) {
+        const localizedRegionName = t[
+          regionId === "head_neck" ? "regionHeadNeck" :
+          regionId === "chest" ? "regionChest" :
+          regionId === "abdomen" ? "regionAbdomen" :
+          regionId === "spine_back" ? "regionSpineBack" :
+          regionId === "arms" ? "regionArms" :
+          regionId === "pelvis" ? "regionPelvis" :
+          regionId === "legs_joints" ? "regionLegsJoints" : "regionSkinGeneral"
+        ] || regionData.nameEn;
         speakText(
           lang === "hi"
-            ? `${regionData.nameHi} चुना गया।`
-            : `${regionData.nameEn} selected.`,
+            ? `${localizedRegionName} चुना गया।`
+            : `${localizedRegionName} selected.`,
           lang
         );
       }
@@ -122,6 +139,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
   };
 
   const handleContinueFromMap = () => {
+    if (Date.now() - mountTimeRef.current < 350) return;
     if (selectedRegions.length === 0) return;
     if (availableOrgans.length > 0) {
       setSubStep("organs");
@@ -245,17 +263,13 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
         duration,
       });
       if (voiceGuide) {
-        speakText(
-          lang === "hi"
-            ? "चिंता न करें, डॉक्टर सामान्य जांच करके आपकी बीमारी का पता लगाएंगे।"
-            : "No worries, the consulting physician will perform a comprehensive physical triage examination.",
-          lang
-        );
+        speakText(t.dontKnowDesc, lang);
       }
     }
   };
 
   const handleProceed = () => {
+    if (Date.now() - mountTimeRef.current < 350) return;
     const finalData: SymptomDrillDownData = {
       selectedOrgans,
       selectedSymptoms,
@@ -267,10 +281,6 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
     onProceedToNextStep(finalData);
   };
 
-  const zoneCountLabel = selectedRegions.length === 1 
-    ? (lang === "en" ? "1 zone selected" : `1 ${t.zonesSelectedCount}`)
-    : `${selectedRegions.length} ${lang === "en" ? "zones selected" : t.zonesSelectedCount}`;
-
   // ══════════════════════════════════════════════════════════════════════════
   // SUB-PAGE 1: Specify Specific Body Part / Organs
   // ══════════════════════════════════════════════════════════════════════════
@@ -281,7 +291,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
         {/* Top Header */}
         <div className="flex flex-col items-center justify-center text-center px-1">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            {lang === "hi" ? "क्या आप किसी विशिष्ट अंग को चुनना चाहते हैं?" : "Do you want to specify any body part?"}
+            {t.specifyBodyPartTitle}
           </h2>
         </div>
 
@@ -291,7 +301,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
           {/* Organs Grid Header */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              {lang === "hi" ? "विशिष्ट अंग / भाग" : "Affected Organs / Sub-areas"}
+              {t.affectedOrgansLabel}
             </label>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2">
@@ -309,7 +319,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                     }`}
                   >
                     <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                      {lang === "hi" ? organ.nameHi : organ.nameEn}
+                      {getLocalizedOrganName(organ.id, lang, organ.nameEn, organ.nameHi)}
                     </span>
                     <div
                       className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ml-1.5 ${
@@ -335,7 +345,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                 }`}
               >
                 <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                  {lang === "hi" ? "निश्चित नहीं / Not Sure" : "I Don't Know / Not Sure"}
+                  {t.dontKnowOption}
                 </span>
                 <div
                   className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ml-1.5 ${
@@ -358,14 +368,14 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
               className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99]"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{lang === "hi" ? "बॉडी मैप" : "Back"}</span>
+              <span>{t.bodyMap}</span>
             </button>
             <button
               type="button"
               onClick={handleContinueFromOrgans}
               className="flex-1 h-10 py-2 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-600/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-1.5"
             >
-              <span>{lang === "hi" ? "लक्षण विवरण के लिए आगे बढ़ें" : "Continue to Symptoms"}</span>
+              <span>{t.continueToSymptoms}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -386,11 +396,11 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
         <div className="flex flex-col items-center justify-center text-center px-1">
           <div className="flex items-center gap-2">
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              {lang === "hi" ? "क्या आपको इनमें से कोई सामान्य लक्षण हैं?" : "Do you have any of these common symptoms?"}
+              {t.commonSymptomsPrompt}
             </h2>
             {totalSymptomPages > 1 && (
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-black border border-emerald-300 dark:border-emerald-800">
-                {lang === "hi" ? `पृष्ठ ${symptomPage}/${totalSymptomPages}` : `Page ${symptomPage} of ${totalSymptomPages}`}
+                {formatPage(symptomPage, totalSymptomPages, lang)}
               </span>
             )}
           </div>
@@ -403,13 +413,16 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-                {lang === "hi" ? "सामान्य लक्षण" : "Common Everyday Symptoms"}
+                {t.commonEverydaySymptoms}
               </label>
               {totalSymptomPages > 1 && (
                 <span className="text-[11px] text-slate-400 font-semibold">
-                  {lang === "hi"
-                    ? `लक्षण ${symptomPage === 1 ? `1 - ${symptomsPerPage}` : `${symptomsPerPage + 1} - ${availableSymptoms.length}`} (कुल ${availableSymptoms.length})`
-                    : `Showing ${symptomPage === 1 ? `1 - ${symptomsPerPage}` : `${symptomsPerPage + 1} - ${availableSymptoms.length}`} of ${availableSymptoms.length}`}
+                  {formatSymptomsRange(
+                    symptomPage === 1 ? 1 : symptomsPerPage + 1,
+                    symptomPage === 1 ? Math.min(symptomsPerPage, availableSymptoms.length) : availableSymptoms.length,
+                    availableSymptoms.length,
+                    lang
+                  )}
                 </span>
               )}
             </div>
@@ -429,7 +442,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                     }`}
                   >
                     <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                      {lang === "hi" ? symptom.nameHi : symptom.nameEn}
+                      {getLocalizedSymptomName(symptom.id, lang, symptom.nameEn, symptom.nameHi)}
                     </span>
                     <div
                       className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ml-1.5 ${
@@ -456,10 +469,10 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
               <ArrowLeft className="w-4 h-4" />
               <span>
                 {totalSymptomPages === 2 && symptomPage === 2
-                    ? (lang === "hi" ? "पिछला पृष्ठ" : "Previous Page")
+                    ? t.previousPage
                     : availableOrgans.length > 0
-                    ? (lang === "hi" ? "अंग चयन" : "Back")
-                    : (lang === "hi" ? "बॉडी मैप" : "Back")}
+                    ? t.organSelection
+                    : t.bodyMap}
               </span>
             </button>
             <button
@@ -469,8 +482,8 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
             >
               <span>
                 {totalSymptomPages === 2 && symptomPage === 1
-                  ? (lang === "hi" ? "अन्य लक्षण देखें (पृष्ठ 2)" : "Continue to More Symptoms (Page 2)")
-                  : (lang === "hi" ? "तकलीफ और अवधि दर्ज करें" : "Continue to Discomfort & Duration")}
+                  ? t.continueToMoreSymptoms
+                  : t.continueToDiscomfort}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -491,7 +504,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
         {/* Top Header */}
         <div className="flex flex-col items-center justify-center text-center px-1">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            {lang === "hi" ? "तकलीफ का स्तर और अवधि बताएं" : "Level of Discomfort & Duration"}
+            {t.discomfortDurationTitle}
           </h2>
         </div>
 
@@ -502,14 +515,14 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
           <div className="bg-slate-50/80 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-2">
             <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
               <Flame className="w-3.5 h-3.5 text-rose-500" />
-              <span>{lang === "hi" ? "तकलीफ का स्तर" : "Level of Discomfort"}</span>
+              <span>{t.levelOfDiscomfort}</span>
             </label>
 
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: "mild", score: 2, label: lang === "hi" ? "हल्का (Mild)" : "Mild" },
-                { id: "moderate", score: 5, label: lang === "hi" ? "मध्यम (Moderate)" : "Moderate" },
-                { id: "severe", score: 9, label: lang === "hi" ? "गंभीर (Severe)" : "Severe" },
+                { id: "mild", score: 2, label: t.mild },
+                { id: "moderate", score: 5, label: t.moderate },
+                { id: "severe", score: 9, label: t.severe },
               ].map((item) => {
                 const isSelected = item.id === "mild" ? painSeverity <= 3 : item.id === "moderate" ? (painSeverity > 3 && painSeverity < 8) : painSeverity >= 8;
                 return (
@@ -543,15 +556,15 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
           <div className="bg-slate-50/80 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-2">
             <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{lang === "hi" ? "यह समस्या कब से है? (अवधि)" : "Duration"}</span>
+              <span>{t.durationPrompt}</span>
             </label>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { id: "today", label: lang === "hi" ? "आज से" : "Since Today" },
-                { id: "few_days", label: lang === "hi" ? "2 - 3 दिन" : "2 - 3 Days" },
-                { id: "more_than_week", label: lang === "hi" ? "1 सप्ताह +" : "Over 1 Week" },
-                { id: "chronic", label: lang === "hi" ? "लंबे समय से" : "Chronic" },
+                { id: "today", label: t.today },
+                { id: "few_days", label: t.fewDays },
+                { id: "more_than_week", label: t.moreThanWeek },
+                { id: "chronic", label: t.chronic },
               ].map((item) => {
                 const isSelected = duration === item.id;
                 return (
@@ -589,14 +602,14 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
               className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99]"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{lang === "hi" ? "लक्षण" : "Back"}</span>
+              <span>{t.symptomsLabel}</span>
             </button>
             <button
               type="button"
               onClick={handleProceed}
               className="flex-1 h-10 py-2 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-600/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-1.5"
             >
-              <span>{lang === "hi" ? "आगे बढ़ें: पर्चा अपलोड करें" : "Next: Upload Prescription"}</span>
+              <span>{t.nextUploadPrescription}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -613,13 +626,10 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
     <div className="w-full max-w-4xl mx-auto space-y-2.5">
       
       {/* Top Simple Page Header */}
-      <div className="px-1 space-y-0.5 text-center">
+      <div className="px-1 text-center pb-0.5">
         <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-          {lang === "hi" ? "शरीर का प्रभावित अंग चुनें" : "Select the Body Part"}
+          {t.selectBodyPartTitle}
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          {lang === "hi" ? "मानव शरीर के चित्र पर स्पर्श करें या सूची में से चुनें" : "Tap on the body model or select from the list"}
-        </p>
       </div>
 
       {/* Main Interactive Anatomy Grid */}
@@ -631,7 +641,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
           {/* Top: Bold Title + Refined View Switcher */}
           <div className="w-full flex flex-col items-center justify-center text-center gap-1.5 z-10">
             <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
-              {lang === "hi" ? "प्रभावित अंग पर स्पर्श करें" : "Tap on the affected body area"}
+              {t.tapAffectedArea}
             </h3>
 
             {/* Refined Front View / Back Spine View Segmented Control */}
@@ -841,14 +851,6 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
               </g>
             </svg>
           </div>
-
-          {/* Bottom: Selected Zones Numbering Badge inside the box */}
-          <div className="w-full flex items-center justify-center pt-2 border-t border-slate-100 dark:border-slate-800/80">
-            <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 shadow-sm flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{zoneCountLabel}</span>
-            </span>
-          </div>
         </div>
 
         {/* Right: Region Selection Checklist with All 8 Options Visible at Once in 2 Columns */}
@@ -860,9 +862,6 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                   <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>{t.selectedZones}</span>
                 </h3>
-                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  {zoneCountLabel}
-                </span>
               </div>
               {selectedRegions.length > 0 && (
                 <button
@@ -917,7 +916,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                           ] || region.nameEn}
                         </h4>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5 font-medium line-clamp-1">
-                          {lang === "en" ? region.colloquialEn : region.colloquialHi}
+                          {getLocalizedColloquialRegion(regId, lang, region.colloquialEn, region.colloquialHi)}
                         </p>
                       </div>
                     </div>
@@ -936,7 +935,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
                 className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99]"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{lang === "hi" ? "पंजीकरण" : "Back"}</span>
+                <span>{t.registration}</span>
               </button>
             )}
             <button
@@ -952,9 +951,9 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
               <span>
                 {selectedRegions.length > 0
                   ? (availableOrgans.length > 0
-                      ? (lang === "hi" ? "विशिष्ट अंग चुनने के लिए आगे बढ़ें" : "Continue to Specify Body Part")
-                      : (lang === "hi" ? "लक्षण विवरण के लिए आगे बढ़ें" : "Continue to Symptom Details"))
-                  : (lang === "hi" ? "कम से कम 1 प्रभावित अंग चुनें" : "Select at least 1 Body Part")}
+                      ? t.continueToSpecifyPart
+                      : t.continueToSymptomDetails)
+                  : t.selectAtLeastOnePart}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>

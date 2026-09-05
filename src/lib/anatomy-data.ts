@@ -46,7 +46,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "heart",
         nameEn: "Heart / Cardiovascular",
-        nameHi: "हृदय / दिल (Heart)",
+        nameHi: "हृदय / दिल",
         icon: "❤️",
         descriptionEn: "Palpitations, chest pressure, irregular beats",
         descriptionHi: "धड़कन तेज होना, भारीपन, सीने में दबाव",
@@ -54,7 +54,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "lungs",
         nameEn: "Lungs / Respiratory",
-        nameHi: "फेफड़े / श्वास नली (Lungs)",
+        nameHi: "फेफड़े / श्वास नली",
         icon: "🫁",
         descriptionEn: "Breathing difficulty, cough, wheezing",
         descriptionHi: "सांस फूलना, खांसी, सीटी जैसी आवाज",
@@ -62,7 +62,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "ribcage",
         nameEn: "Ribcage & Chest Muscles",
-        nameHi: "पसलियां एवं मांसपेशियां (Ribs & Muscles)",
+        nameHi: "पसलियां एवं मांसपेशियां",
         icon: "🦴",
         descriptionEn: "Muscular soreness, pain on twisting or breathing",
         descriptionHi: "मांसपेशियों में खिंचाव, मुड़ने पर दर्द",
@@ -87,7 +87,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "upper_stomach",
         nameEn: "Upper Stomach & Gastric",
-        nameHi: "ऊपरी पेट व आमाशय (Upper Stomach)",
+        nameHi: "ऊपरी पेट व आमाशय",
         icon: "🥣",
         descriptionEn: "Gastric burning, severe acidity, upper cramps",
         descriptionHi: "पेट में जलन, गैस, ऊपरी हिस्से में मरोड़",
@@ -95,7 +95,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "liver_gallbladder",
         nameEn: "Liver & Gallbladder Area",
-        nameHi: "लिवर / पित्ताशय क्षेत्र (Liver & Gallbladder)",
+        nameHi: "लिवर / पित्ताशय क्षेत्र",
         icon: "🫀",
         descriptionEn: "Right side pain under ribs, nausea, jaundice signs",
         descriptionHi: "दाहिनी पसलियों के नीचे दर्द, पीलिया के लक्षण",
@@ -103,7 +103,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "lower_bowel",
         nameEn: "Lower Abdomen & Intestines",
-        nameHi: "निचला पेट व आंतें (Lower Abdomen & Bowel)",
+        nameHi: "निचला पेट व आंतें",
         icon: "🌀",
         descriptionEn: "Loose motions, severe constipation, abdominal cramps",
         descriptionHi: "दस्त, कब्ज, पेट में तेज मरोड़ या ऐंठन",
@@ -128,7 +128,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "forehead_brain",
         nameEn: "Forehead & Brain Area",
-        nameHi: "माथा व सिर (Forehead & Head)",
+        nameHi: "माथा व सिर",
         icon: "🧠",
         descriptionEn: "Throbbing headache, migraine, dizziness",
         descriptionHi: "तेज सिरदर्द, माइग्रेन, चक्कर आना",
@@ -136,7 +136,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "throat_tonsils",
         nameEn: "Throat & Tonsils",
-        nameHi: "गला व टॉन्सिल (Throat & Tonsils)",
+        nameHi: "गला व टॉन्सिल",
         icon: "🗣️",
         descriptionEn: "Sore throat, difficulty swallowing, tonsil swelling",
         descriptionHi: "गले में खराश, निगलने में दर्द, टॉन्सिल",
@@ -144,7 +144,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "eyes_ears",
         nameEn: "Eyes, Ears & Sinuses",
-        nameHi: "आंख, कान व साइनस (Eyes, Ears & Sinuses)",
+        nameHi: "आंख, कान व साइनस",
         icon: "👂",
         descriptionEn: "Ear pain/discharge, blurry vision, eye redness",
         descriptionHi: "कान बहना या दर्द, आंख में लालिमा या धुंधलापन",
@@ -169,7 +169,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "cervical_spine",
         nameEn: "Neck & Upper Spine (Cervical)",
-        nameHi: "गर्दन व ऊपरी रीढ़ (Cervical)",
+        nameHi: "गर्दन व ऊपरी रीढ़",
         icon: "🦯",
         descriptionEn: "Stiff neck, pain shooting to arms",
         descriptionHi: "गर्दन में अकड़न, बांहों में खिंचाव",
@@ -177,7 +177,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "lumbar_lower_back",
         nameEn: "Lower Back & Lumbar Spine",
-        nameHi: "निचली कमर व रीढ़ (Lower Back)",
+        nameHi: "निचली कमर व रीढ़",
         icon: "🩻",
         descriptionEn: "Sciatica, lower back spasm, pain while bending",
         descriptionHi: "कमर में लचक, झुकने पर असहनीय दर्द, सायटिका",
@@ -200,7 +200,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "shoulder_joint",
         nameEn: "Shoulder & Rotator Cuff",
-        nameHi: "कंधा व जोड़ (Shoulder)",
+        nameHi: "कंधा व जोड़",
         icon: "💪",
         descriptionEn: "Frozen shoulder, unable to lift arm",
         descriptionHi: "कंधा जाम होना, हाथ ऊपर न उठना",
@@ -231,7 +231,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "urinary_bladder",
         nameEn: "Urinary System & Bladder",
-        nameHi: "मूत्राशय एवं मूत्र मार्ग (Urinary)",
+        nameHi: "मूत्राशय एवं मूत्र मार्ग",
         icon: "💧",
         descriptionEn: "Burning urination, frequent urge, blood in urine",
         descriptionHi: "पेशाब में जलन, बार-बार पेशाब आना, खून आना",
@@ -239,7 +239,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "hip_joints",
         nameEn: "Hip Joints & Pelvic Bone",
-        nameHi: "कूल्हे के जोड़ (Hip Joints)",
+        nameHi: "कूल्हे के जोड़",
         icon: "🦴",
         descriptionEn: "Hip stiffness, pain on walking",
         descriptionHi: "चलने पर कूल्हे में दर्द, लंगड़ापन",
@@ -262,7 +262,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "knee_joints",
         nameEn: "Knee Joints & Cartilage",
-        nameHi: "घुटने के जोड़ (Knees & Cartilage)",
+        nameHi: "घुटने के जोड़",
         icon: "🦵",
         descriptionEn: "Arthritis, knee swelling, popping sound, difficulty bending",
         descriptionHi: "गठिया, घुटने में सूजन, चटकने की आवाज, मुड़ने में दर्द",
@@ -270,7 +270,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "ankles_feet",
         nameEn: "Ankles, Heels & Feet",
-        nameHi: "टखने, एड़ी एवं तलवे (Ankles & Feet)",
+        nameHi: "टखने, एड़ी एवं तलवे",
         icon: "🦶",
         descriptionEn: "Ankle sprain, heel pain in morning, swollen feet",
         descriptionHi: "टखने में मोच, सुबह एड़ी में चुभन, पैरों में सूजन",
@@ -293,7 +293,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "skin_surface",
         nameEn: "Skin Surface & Allergy",
-        nameHi: "त्वचा की सतह व एलर्जी (Skin & Allergy)",
+        nameHi: "त्वचा की सतह व एलर्जी",
         icon: "🧴",
         descriptionEn: "Itchy red rashes, fungal patches, hives",
         descriptionHi: "खुजली वाले लाल चकत्ते, फंगल दाद, पित्ती",
@@ -301,7 +301,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       {
         id: "whole_body_vitals",
         nameEn: "General Body & Vital Energy",
-        nameHi: "संपूर्ण शरीर व सामान्य ऊर्जा (General Vitality)",
+        nameHi: "संपूर्ण शरीर व सामान्य ऊर्जा",
         icon: "⚡",
         descriptionEn: "Extreme fatigue, weight loss, chronic low fever",
         descriptionHi: "अत्यधिक कमजोरी, वजन गिरना, हल्का बुखार",

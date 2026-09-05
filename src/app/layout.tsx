@@ -29,12 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased text-slate-900 dark:text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white transition-colors duration-200 relative">
-        {/* Doctor background image — very subtle texture */}
+        {/* Doctor-Patient Background Image */}
         <div
           aria-hidden="true"
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.35] dark:opacity-[0.30] transition-opacity duration-300"
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.25] dark:opacity-[0.18] transition-opacity duration-300"
           style={{
-            backgroundImage: `url('/images/hospital-ward-bg.jpg')`,
+            backgroundImage: `url('/images/doctor-patient-bg.jpg')`,
             backgroundAttachment: "fixed",
           }}
         />
