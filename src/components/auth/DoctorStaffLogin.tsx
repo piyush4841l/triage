@@ -62,7 +62,7 @@ export const DoctorStaffLogin: React.FC<DoctorStaffLoginProps> = ({ onLogin, lan
       role: "Doctor",
     };
     try {
-      localStorage.setItem("doctor_session", JSON.stringify(sessionData));
+      sessionStorage.setItem("doctor_session", JSON.stringify(sessionData));
     } catch (err) {
       // ignore
     }

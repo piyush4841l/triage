@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   AlertOctagon, 
   Mic, 
@@ -17,6 +17,7 @@ import { Language, translations, getIdentityLabels } from "@/lib/i18n";
 import { computeTriage } from "@/lib/triage";
 import { addToken, StoredToken } from "@/lib/store";
 import { globalSpeechRecognizer, speakText } from "@/lib/speech";
+import { MOCK_ABHA_DATABASE } from "@/lib/mock-abha";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 
 interface EmergencyFastTrackModalProps {
@@ -44,6 +45,17 @@ export const EmergencyFastTrackModal: React.FC<EmergencyFastTrackModalProps> = (
   const [isListeningPhone, setIsListeningPhone] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (idType === "abha") {
+      const strippedAbha = abhaId.replace(/\D/g, "");
+      const profile = MOCK_ABHA_DATABASE[strippedAbha];
+      if (profile) {
+        setPatientName(profile.name);
+        setPhone(profile.phone);
+      }
+    }
+  }, [abhaId, idType]);
 
   if (!isOpen) return null;
 

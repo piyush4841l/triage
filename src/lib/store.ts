@@ -24,12 +24,25 @@ export interface StoredToken {
     medications: string[];
     allergies: string[];
     rawText: string;
+    aiSummary?: string;
   };
 }
 
 const STORAGE_KEY = "sih_opd_tokens_queue_v2";
+const SESSION_ALIVE_KEY = "sih_session_alive";
 
 export const INITIAL_PRELOADED_TOKENS: StoredToken[] = [];
+
+// Called once per new browser session. If sessionStorage flag is absent
+// (meaning the browser was closed), we wipe the stale localStorage queue.
+export function initSessionQueue(): void {
+  if (typeof window === "undefined") return;
+  if (!sessionStorage.getItem(SESSION_ALIVE_KEY)) {
+    // New browser session — clear any leftover tokens from previous run
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.setItem(SESSION_ALIVE_KEY, "1");
+  }
+}
 
 export function getStoredTokens(): StoredToken[] {
   if (typeof window === "undefined") return INITIAL_PRELOADED_TOKENS;
@@ -58,9 +71,7 @@ export function saveStoredTokens(tokens: StoredToken[]) {
         ...t,
         uploadedDocuments: t.uploadedDocuments?.map((d) => ({
           ...d,
-          previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
-            ? "/images/tanmay-report.jpg" 
-            : d.previewUrl,
+          previewUrl: d.previewUrl,
         })),
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
@@ -87,9 +98,7 @@ export function addToken(token: StoredToken): StoredToken[] {
     if (cleanToken.uploadedDocuments) {
       cleanToken.uploadedDocuments = cleanToken.uploadedDocuments.map((d: any) => ({
         ...d,
-        previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
-          ? "/images/tanmay-report.jpg" 
-          : d.previewUrl,
+        previewUrl: d.previewUrl,
       }));
     }
     const docRef = doc(db, "tokens", token.id);
@@ -122,9 +131,7 @@ export function updateTokenStatus(tokenId: string, newStatus: QueueStatus): Stor
       if (cleanToken.uploadedDocuments) {
         cleanToken.uploadedDocuments = cleanToken.uploadedDocuments.map((d: any) => ({
           ...d,
-          previewUrl: d.previewUrl?.startsWith("data:") && d.previewUrl.length > 50000 
-            ? "/images/tanmay-report.jpg" 
-            : d.previewUrl,
+          previewUrl: d.previewUrl,
         }));
       }
       const docRef = doc(db, "tokens", targetToken.id);

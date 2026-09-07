@@ -29,6 +29,7 @@ import { WhatsAppDispatchModal } from "@/components/token/WhatsAppDispatchModal"
 import { Language, getIdentityLabels } from "@/lib/i18n";
 import { speakText } from "@/lib/speech";
 import { useLanguage } from "@/lib/language-context";
+import { MOCK_ABHA_DATABASE } from "@/lib/mock-abha";
 
 interface EmergencyTexts {
   back: string;
@@ -1171,16 +1172,34 @@ export default function EmergencyPage() {
       return;
     }
     if (authMethod === "pass" && !passInput.trim()) {
-      setVerifyError("Please enter your password");
-      return;
-    }
-    setIsVerifying(true);
+        setVerifyError("Please enter your password");
+        return;
+      }
+
+      if (idType === "abha" && authMethod === "pass") {
+        const strippedAbha = abhaId.replace(/\D/g, "");
+        const profile = MOCK_ABHA_DATABASE[strippedAbha];
+        if (profile && passInput !== profile.password) {
+          setVerifyError("Incorrect password");
+          return;
+        }
+      }
+
+      setIsVerifying(true);
     setVerifyError("");
     setTimeout(() => {
       setIsVerifying(false);
       setIsVerified(true);
       setVerificationState("idle");
-      setErrors((prev) => {
+        if (idType === "abha") {
+          const strippedAbha = abhaId.replace(/\D/g, "");
+          const profile = MOCK_ABHA_DATABASE[strippedAbha];
+          if (profile) {
+            setPatientName(profile.name);
+            setPhone(profile.phone);
+          }
+        }
+        setErrors((prev) => {
         const next = { ...prev };
         delete next.identity;
         delete next.abha;

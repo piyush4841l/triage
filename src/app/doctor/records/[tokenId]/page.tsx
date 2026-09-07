@@ -111,6 +111,7 @@ export default function DoctorPatientRecordsPage() {
   const [selectedSlotId, setSelectedSlotId] = useState<string>("slot-current");
   const [activePageIndex, setActivePageIndex] = useState<number>(0);
   const [fullscreenReport, setFullscreenReport] = useState<UploadedReportDocument | null>(null);
+  const [reportViewTab, setReportViewTab] = useState<"ai_summary" | "original_doc" | "abha_reports">("ai_summary");
   const [loggedInDoctor, setLoggedInDoctor] = useState<string>("");
 
   // Zoom & Pan state for High-Resolution Document Inspection
@@ -151,7 +152,7 @@ export default function DoctorPatientRecordsPage() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("doctor_session");
+      const saved = sessionStorage.getItem("doctor_session");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed?.name) {
@@ -215,61 +216,30 @@ export default function DoctorPatientRecordsPage() {
   ];
 
   if (token?.uploadedDocuments && token.uploadedDocuments.length > 0) {
-    token.uploadedDocuments.forEach((doc, idx) => {
-      currentUploadedDocs.push({
-        id: `current-doc-${idx}`,
-        name: doc.name || `Patient_Prescription_Document_0${idx + 1}.jpg`,
-        size: doc.size || "1.4 MB",
-        date: "Today",
-        type: "prescription",
-        previewUrl: doc.previewUrl || sampleDocumentImages[idx % sampleDocumentImages.length],
-        clinicalImpression: token?.ocrDetails?.rawText || "Prescription uploaded by patient via Mobile Camera.",
+      token.uploadedDocuments.forEach((doc, idx) => {
+        currentUploadedDocs.push({
+          id: `current-doc-${idx}`,
+          name: doc.name || `Patient_Prescription_Document_0${idx + 1}.jpg`,
+          size: doc.size || "1.4 MB",
+          date: "Today",
+          type: "prescription",
+          previewUrl: doc.previewUrl || sampleDocumentImages[idx % sampleDocumentImages.length],
+          clinicalImpression: token?.ocrDetails?.rawText || "Prescription uploaded by patient via Mobile Camera.",
+        });
       });
-    });
-  } else if (token?.mockAbhaProfile?.reportImage) {
-    currentUploadedDocs.push(
-      {
-        id: "current-doc-abha-1",
-        name: "Patient_Previous_Prescription_Slip.jpg",
-        size: "1.4 MB",
-        date: "Today",
-        type: "prescription",
-        previewUrl: token.mockAbhaProfile.reportImage || "/images/tanmay-report.jpg",
-        clinicalImpression: token?.ocrDetails?.rawText || "Prescription uploaded by patient via Mobile Camera.",
-      },
-      {
-        id: "current-doc-abha-2",
-        name: "Diagnostic_Lab_Investigation_Page2.jpg",
-        size: "980 KB",
-        date: "Today",
-        type: "lab_report",
-        previewUrl: "/images/aadit-report.jpg",
-        clinicalImpression: "Attached external clinical laboratory investigation report.",
-      }
-    );
-  } else {
-    // Realistic scanned document photos for intake demo
-    currentUploadedDocs.push(
-      {
-        id: "current-intake-1",
-        name: "Patient_Previous_Prescription_Slip.jpg",
-        size: "1.4 MB",
-        date: "Today",
-        type: "prescription",
-        previewUrl: "/images/tanmay-report.jpg",
-        clinicalImpression: token?.ocrDetails?.rawText || token?.result.chiefComplaintSummaryEn || "Prior OPD medical slip uploaded by the patient at check-in.",
-      },
-      {
-        id: "current-intake-2",
-        name: "External_Lab_Blood_Investigation.jpg",
-        size: "980 KB",
-        date: "Today",
-        type: "lab_report",
-        previewUrl: "/images/aadit-report.jpg",
-        clinicalImpression: "Borderline ESR elevation noted. Routine metabolic and hematological indices intact.",
-      }
-    );
-  }
+    } else if (token?.mockAbhaProfile?.reportImage) {
+      currentUploadedDocs.push(
+        {
+          id: "current-doc-abha-1",
+          name: "Patient_Previous_Prescription_Slip.jpg",
+          size: "1.4 MB",
+          date: "Today",
+          type: "prescription",
+          previewUrl: token.mockAbhaProfile.reportImage,
+          clinicalImpression: token?.ocrDetails?.rawText || "Prescription fetched from ABDM / ABHA Network.",
+        }
+      );
+    }
 
   // Dynamic Today Slot tailored to patient's department and selected issues
   const isOrtho = currentDept.toLowerCase().includes("ortho");
@@ -471,6 +441,13 @@ export default function DoctorPatientRecordsPage() {
     Boolean(token?.result.department?.toLowerCase().includes("emergency"));
 
   // Appointment Slots History (Chronological past meetings & visits)
+  
+  const allTokens = getStoredTokens();
+  const abhaToMatch = token?.input?.abhaId;
+  const historyTokens = abhaToMatch 
+    ? allTokens.filter(t => t.input?.abhaId === abhaToMatch && t.id !== token?.id)
+    : [];
+
   const appointmentSlots: AppointmentSlot[] = [
     {
       id: "slot-current",
@@ -509,246 +486,63 @@ export default function DoctorPatientRecordsPage() {
       doctorNotes: todayDoctorNotes,
       uploadedReports: currentUploadedDocs,
     },
-    {
-      id: "slot-past-1",
-      date: "18 Feb 2026",
-      time: "10:30 AM",
-      formattedDate: "18 Feb 2026",
-      category: "OPD",
-      department: "General Medicine OPD",
-      departmentHi: "सामान्य चिकित्सा ओपीडी",
-      doctorName: "Dr. Priya Nair, MD",
-      doctorRole: "Consultant Physician",
-      status: "Completed",
-      visitType: "Follow-up Consultation",
-      diagnosis: "Essential Hypertension & Viral Rhinopharyngitis",
-      diagnosisHi: "उच्च रक्तचाप एवं मौसमी संक्रमण",
-      chiefComplaints: "Follow-up for elevated blood pressure recordings, throbbing headache and persistent nasal congestion.",
-      symptomsReported: ["throbbing_frontal_headache", "fatigue", "dry_cough", "mild_sore_throat"],
-      selectedOrgans: ["head", "throat"],
-      painSeverity: 4,
-      duration: "few_days",
-      vitals: {
-        bp: "138/88 mmHg",
-        pulse: "82 bpm",
-        spo2: "98%",
-        temp: "99.1°F",
-      },
-      aiSummary: "AI Assessment: Chronic mild hypertensive presentation accompanied by upper respiratory viral symptoms. Ambulatory BP monitoring and symptom-targeted anti-inflammatory course advised.",
-      prescriptions: [
-        {
-          medicine: "Tab Telmisartan 40mg",
-          dosage: "40 mg",
-          frequency: "1 OD (Morning)",
-          duration: "30 Days",
-          instructions: "Regular BP monitoring log required.",
+    ...historyTokens.map((t, index) => {
+      const isEmergency = Boolean(t.result.department?.toLowerCase().includes("emergency"));
+      const pastUploadedDocs = t.uploadedDocuments?.map(d => ({
+        id: "doc-hist-" + Math.random().toString(),
+        name: d.name,
+        size: d.size || "Unknown",
+        date: new Date(t.createdAt).toLocaleDateString(),
+        type: (d.type === "lab_report" || d.type === "prescription" || d.type === "radiology" ? d.type : "general") as "lab_report" | "prescription" | "radiology" | "general",
+        previewUrl: d.previewUrl,
+        clinicalImpression: "Uploaded via SwasthyaSetu Kiosk",
+      })) || [];
+      
+      // Bring in their historical ABHA report if available
+      if (t.mockAbhaProfile?.reportImage && !pastUploadedDocs.some(x => x.previewUrl === t.mockAbhaProfile.reportImage)) {
+         pastUploadedDocs.push({
+           id: "doc-mock-hist-" + index,
+           name: "Historical_Medical_Record.jpg",
+           size: "2.1 MB",
+           date: "Historical",
+           type: "radiology",
+           previewUrl: t.mockAbhaProfile.reportImage,
+           clinicalImpression: "Retrieved from ABHA Health Records DB",
+         });
+      }
+
+      return {
+        id: "slot-past-" + t.id,
+        date: new Date(t.createdAt).toLocaleDateString(),
+        time: new Date(t.createdAt).toLocaleTimeString(),
+        formattedDate: new Date(t.createdAt).toLocaleDateString(),
+        category: (isEmergency ? "Emergency" : "OPD") as "Emergency" | "OPD",
+        department: t.result.department || "General OPD",
+        departmentHi: t.result.departmentHi || "सामान्य ओपीडी",
+        doctorName: "Dr. Previous Doctor",
+        doctorRole: "Consulting Doctor",
+        status: "Completed" as "Completed" | "Active Visit",
+        visitType: isEmergency ? "Emergency Fast-Track" : "OPD Visit",
+        diagnosis: t.result.triageRationaleEn || "General checkup",
+        diagnosisHi: t.result.triageRationaleHi || "सामान्य जांच",
+        chiefComplaints: t.input.selectedSymptoms?.join(", ") || "General issues",
+        symptomsReported: t.input.selectedSymptoms || [],
+        selectedOrgans: t.input.selectedOrgans?.length ? t.input.selectedOrgans : t.input.selectedRegions || [],
+        painSeverity: t.input.painSeverity || 5,
+        duration: t.input.duration || "few_days",
+        vitals: {
+          bp: "120/80 mmHg",
+          pulse: "72 bpm",
+          spo2: "98%",
+          temp: "98.6°F",
         },
-        {
-          medicine: "Tab Levocetirizine 5mg",
-          dosage: "5 mg",
-          frequency: "1 HS (Bedtime)",
-          duration: "5 Days",
-          instructions: "For allergic rhinitis symptoms.",
-        },
-        {
-          medicine: "Cap Vitamin C + Zinc",
-          dosage: "500 mg",
-          frequency: "1 OD",
-          duration: "15 Days",
-          instructions: "Immunity support post meal.",
-        },
-      ],
-      recommendedTests: [
-        {
-          testName: "Complete Blood Count & Metabolic Panel",
-          category: "Pathology",
-          purpose: "Renal profile and electrolyte balance check",
-          room: "Central Pathology Lab",
-          urgency: "Completed",
-        },
-        {
-          testName: "12-Lead Resting Electrocardiogram (ECG)",
-          category: "Cardiology",
-          purpose: "Baseline hypertensive cardiovascular screen",
-          room: "ECG Room 02",
-          urgency: "Completed",
-        },
-      ],
-      doctorNotes: "BP moderately elevated. Anti-hypertensive therapy initiated. Sodium restriction advised. Re-evaluate in 30 days.",
-      uploadedReports: [
-        {
-          id: "rep-18feb-1",
-          name: "Complete_Blood_Count_Metabolic_Panel.jpg",
-          size: "1.4 MB",
-          date: "18 Feb 2026",
-          type: "lab_report",
-          previewUrl: "/images/mohini-report.jpg",
-          clinicalImpression: "Borderline fasting glycemia noted. Renal function indices within physiological parameters.",
-        },
-        {
-          id: "rep-18feb-2",
-          name: "Standard_12_Lead_ECG_Analysis.jpg",
-          size: "980 KB",
-          date: "18 Feb 2026",
-          type: "radiology",
-          previewUrl: "/images/shashwat-report.jpg",
-          clinicalImpression: "Normal sinus rhythm. Normal axis. No pathological Q waves or acute ST-T wave deviation.",
-        },
-      ],
-    },
-    {
-      id: "slot-past-2",
-      date: "12 Nov 2025",
-      time: "02:15 PM",
-      formattedDate: "12 Nov 2025",
-      category: "Emergency",
-      department: "Emergency & Trauma / Cardiology",
-      departmentHi: "आपातकालीन एवं हृदय रोग विभाग",
-      doctorName: "Dr. Rajesh Mehta, DM",
-      doctorRole: "Senior Interventional Cardiologist",
-      status: "Completed",
-      visitType: "Emergency Cardiac Review",
-      diagnosis: "Atypical Exertional Dyspnea & Dyslipidemia",
-      diagnosisHi: "हृदय रोग एवं कोलेस्ट्रॉल समीक्षा",
-      chiefComplaints: "Substernal heaviness upon climbing 2 flights of stairs, resolved within 5 minutes of rest.",
-      symptomsReported: ["exertional_heaviness", "mild_palpitations", "brisk_walking_fatigue"],
-      selectedOrgans: ["chest", "heart"],
-      painSeverity: 7,
-      duration: "today",
-      vitals: {
-        bp: "142/90 mmHg",
-        pulse: "88 bpm",
-        spo2: "97%",
-        temp: "98.4°F",
-      },
-      aiSummary: "AI Assessment: Exertional cardiac discomfort flagged for immediate emergency cardiology evaluation. Stat 12-lead ECG and lipid panel performed to exclude acute coronary syndrome.",
-      prescriptions: [
-        {
-          medicine: "Tab Atorvastatin 20mg",
-          dosage: "20 mg",
-          frequency: "1 HS (Night)",
-          duration: "90 Days",
-          instructions: "Lipid reduction protocol. Liver function test in 3 months.",
-        },
-        {
-          medicine: "Tab Metoprolol Tartrate 25mg",
-          dosage: "25 mg",
-          frequency: "1 OD (Morning)",
-          duration: "30 Days",
-          instructions: "Controls heart rate and blunts adrenergic spikes.",
-        },
-      ],
-      recommendedTests: [
-        {
-          testName: "2D Transthoracic Echocardiogram (Echo)",
-          category: "Cardiology",
-          purpose: "Left ventricular ejection fraction & wall motion analysis",
-          room: "Echo Lab",
-          urgency: "Completed",
-        },
-        {
-          testName: "Serum Lipid Profile & Liver Function Panel",
-          category: "Pathology",
-          purpose: "Atherogenic lipid stratification",
-          room: "Biochemistry Lab",
-          urgency: "Completed",
-        },
-      ],
-      doctorNotes: "Stress echocardiography showed good exercise capacity. 2D Echo revealed LVEF 60% with normal ventricular wall motion.",
-      uploadedReports: [
-        {
-          id: "rep-12nov-1",
-          name: "2D_Transthoracic_Echocardiogram.jpg",
-          size: "2.1 MB",
-          date: "12 Nov 2025",
-          type: "radiology",
-          previewUrl: "/images/piyush-report.jpg",
-          clinicalImpression: "Normal LV cavity dimensions and systolic contractility. Grade I diastolic relaxation abnormality.",
-        },
-        {
-          id: "rep-12nov-2",
-          name: "Serum_Lipid_Profile_Risk_Stratification.jpg",
-          size: "870 KB",
-          date: "12 Nov 2025",
-          type: "lab_report",
-          previewUrl: "/images/tripti-report.jpg",
-          clinicalImpression: "Mixed dyslipidemia profile. Lifestyle modifications plus statin regimen recommended.",
-        },
-      ],
-    },
-    {
-      id: "slot-past-3",
-      date: "05 Aug 2025",
-      time: "11:00 AM",
-      formattedDate: "05 Aug 2025",
-      category: "OPD",
-      department: "Orthopedics & Joint Clinic",
-      departmentHi: "हड्डी एवं जोड़ रोग विभाग",
-      doctorName: "Dr. Suresh Kulkarni, MS",
-      doctorRole: "Senior Orthopedic Surgeon",
-      status: "Completed",
-      visitType: "Routine Checkup",
-      diagnosis: "Mild Lumbar Strain & Early Medial Knee Arthrosis",
-      diagnosisHi: "कमर दर्द एवं जोड़ सूजन",
-      chiefComplaints: "Lower back stiffness after sitting for long work hours and bilateral knee crepitus when standing up.",
-      symptomsReported: ["lower_back_dull_ache", "bilateral_knee_crepitus", "early_morning_stiffness"],
-      selectedOrgans: ["spine", "knee_joint"],
-      painSeverity: 4,
-      duration: "chronic",
-      vitals: {
-        bp: "122/80 mmHg",
-        pulse: "74 bpm",
-        spo2: "99%",
-        temp: "98.6°F",
-      },
-      aiSummary: "AI Assessment: Mechanical musculoskeletal strain secondary to sedentary posture. Core strengthening physiotherapy and Calcium/Vitamin D3 supplementation suggested.",
-      prescriptions: [
-        {
-          medicine: "Tab Aceclofenac + Paracetamol",
-          dosage: "100/325 mg",
-          frequency: "1 BD (Twice daily)",
-          duration: "5 Days",
-          instructions: "Take strictly after meals for inflammatory pain relief.",
-        },
-        {
-          medicine: "Tab Calcium Citrate + Vit D3",
-          dosage: "1000 mg",
-          frequency: "1 OD",
-          duration: "60 Days",
-          instructions: "Bone mineral density maintenance.",
-        },
-      ],
-      recommendedTests: [
-        {
-          testName: "Digital Radiography Lumbosacral Spine (AP & Lateral)",
-          category: "Radiology",
-          purpose: "L4-L5 disc space and facet joint alignment assessment",
-          room: "X-Ray Room",
-          urgency: "Completed",
-        },
-      ],
-      doctorNotes: "Straight Leg Raise test negative bilaterally. Advised lumbar core exercises, ergonomic chair adjustment, and physiotherapist consult.",
-      uploadedReports: [
-        {
-          id: "rep-05aug-1",
-          name: "Digital_Radiography_Lumbosacral_Spine.jpg",
-          size: "1.9 MB",
-          date: "05 Aug 2025",
-          type: "radiology",
-          previewUrl: "/images/tanmay-report.jpg",
-          clinicalImpression: "Early lumbar spondylotic changes without acute osseous injury or listhesis.",
-        },
-        {
-          id: "rep-05aug-2",
-          name: "Bilateral_Knee_Ultrasound_Evaluation.jpg",
-          size: "1.1 MB",
-          date: "05 Aug 2025",
-          type: "radiology",
-          previewUrl: "/images/aadit-report.jpg",
-          clinicalImpression: "Early bilateral medial knee cartilage thinning. Minimal physiological suprapatellar effusion.",
-        },
-      ],
-    },
+        aiSummary: t.result.triageRationaleEn,
+        prescriptions: [],
+        recommendedTests: [],
+        doctorNotes: "Consultation completed. Advised rest.",
+        uploadedReports: pastUploadedDocs,
+      };
+    })
   ];
 
   const selectedSlot = appointmentSlots.find((s) => s.id === selectedSlotId) || appointmentSlots[0];
@@ -1012,70 +806,192 @@ export default function DoctorPatientRecordsPage() {
 
             </div>
 
-            {/* 4. Reports Uploaded by the Person in Page 1, Page 2 Format */}
+            {/* 4. Documents & AI Analysis — 3-Tab View */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-emerald-500/40 shadow-sm space-y-3">
-              
-              {/* Header with Document Count */}
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center">
-                    <Files className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                      {lang === "hi" 
-                        ? "मरीज द्वारा अपलोड की गई रिपोर्ट" 
-                        : "Reports Uploaded by the Person"}
-                    </h3>
-                  </div>
+
+              {/* Section Header */}
+              <div className="flex items-center space-x-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center">
+                  <Files className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
                 </div>
+                <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white">
+                  Documents &amp; AI Analysis
+                </h3>
               </div>
 
-              {/* Document Switcher Tabs (Page 1, Page 2...) */}
-              {selectedSlot.uploadedReports.length > 0 && (
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {selectedSlot.uploadedReports.map((doc, idx) => (
+              {/* 3 Tab Switcher */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {(["ai_summary", "original_doc", "abha_reports"] as const).map((tab) => {
+                  const labels: Record<string, string> = {
+                    ai_summary: "🤖 AI Summary",
+                    original_doc: "📄 Original Doc",
+                    abha_reports: "🏥 ABHA Records",
+                  };
+                  return (
                     <button
-                      key={doc.id}
+                      key={tab}
                       type="button"
-                      onClick={() => setActivePageIndex(idx)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                        activePageIndex === idx
-                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-500/20"
+                      onClick={() => setReportViewTab(tab)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                        reportViewTab === tab
+                          ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-500/20"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                       }`}
                     >
-                      <Files className="w-3.5 h-3.5" />
-                      <span>{lang === "hi" ? `पेज ${idx + 1}` : `Page ${idx + 1}`}</span>
-                      {activePageIndex === idx && <CheckCircle2 className="w-3.5 h-3.5 ml-0.5" />}
+                      {labels[tab]}
                     </button>
-                  ))}
+                  );
+                })}
+              </div>
+
+              {/* TAB 1 — AI Summary */}
+              {reportViewTab === "ai_summary" && (
+                <div className="space-y-3">
+                  {token?.ocrDetails?.aiSummary ? (
+                    <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-[10px] font-black">AI</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-emerald-800 dark:text-emerald-300">ATLAS AI — Clinical Document Analysis</p>
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-500">Auto-generated from uploaded report</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{token.ocrDetails.aiSummary}</p>
+                      {(token.ocrDetails.diagnoses?.length > 0) && (
+                        <div className="pt-2 border-t border-emerald-200 dark:border-emerald-800 space-y-1.5">
+                          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Extracted Diagnoses</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {token.ocrDetails.diagnoses.map((d, i) => (
+                              <span key={i} className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">{d}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(token.ocrDetails.medications?.length > 0) && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Medications Found</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {token.ocrDetails.medications.map((m, i) => (
+                              <span key={i} className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{m}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-[10px] text-slate-400 italic mt-2">AI summaries are assistive only. Always verify with the original document.</p>
+                    </div>
+                  ) : token?.uploadedDocuments && token.uploadedDocuments.length > 0 ? (
+                    <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/30 p-4 text-center space-y-2">
+                      <p className="text-sm font-bold text-amber-700 dark:text-amber-400">AI Summary Not Available</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-500">Document uploaded but not AI-scanned. Switch to Original Doc tab to view the file.</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-6 text-center space-y-2">
+                      <Files className="w-8 h-8 text-slate-400 mx-auto" />
+                      <p className="text-sm font-bold text-slate-500">No Documents Uploaded</p>
+                      <p className="text-xs text-slate-400">Patient did not upload documents during registration.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Active Document Visual Preview Frame (Clean Document Photo Image) */}
-              {activeReport && (() => {
-                const previewImg = activeReport.previewUrl || (activePageIndex % 2 === 0 ? "/images/tanmay-report.jpg" : "/images/aadit-report.jpg");
-                return (
-                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2 relative overflow-hidden flex flex-col items-center justify-center">
-                    
-                    {/* Scanned Document Photo Image */}
-                    <div 
-                      onClick={() => handleOpenFullscreen({ ...activeReport, previewUrl: previewImg })}
-                      className="relative w-full h-80 sm:h-96 md:h-[480px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-black flex items-center justify-center cursor-zoom-in group shadow-inner"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={previewImg}
-                        alt={activeReport.name}
-                        className="w-full h-full object-contain group-hover:scale-[1.01] transition-transform duration-200"
-                      />
+              {/* TAB 2 — Original Document */}
+              {reportViewTab === "original_doc" && (
+                <div className="space-y-3">
+                  {selectedSlot.uploadedReports.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      {selectedSlot.uploadedReports.map((doc, idx) => (
+                        <button
+                          key={doc.id}
+                          type="button"
+                          onClick={() => setActivePageIndex(idx)}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                            activePageIndex === idx
+                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                          }`}
+                        >
+                          <Files className="w-3.5 h-3.5" />
+                          <span>Doc {idx + 1}</span>
+                          {activePageIndex === idx && <CheckCircle2 className="w-3.5 h-3.5 ml-0.5" />}
+                        </button>
+                      ))}
                     </div>
+                  )}
+                  {activeReport ? (
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 p-2">
+                      <div
+                        onClick={() => handleOpenFullscreen({ ...activeReport, previewUrl: activeReport.previewUrl })}
+                        className="relative w-full h-80 sm:h-96 md:h-[480px] rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center cursor-zoom-in group"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={activeReport.previewUrl}
+                          alt={activeReport.name}
+                          className="w-full h-full object-contain group-hover:scale-[1.01] transition-transform duration-200"
+                        />
+                        <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-black/60 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to zoom
+                        </div>
+                      </div>
+                      {activeReport.clinicalImpression && (
+                        <p className="text-xs text-slate-400 mt-2 px-1 italic">"{activeReport.clinicalImpression}"</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-6 text-center">
+                      <p className="text-sm font-bold text-slate-500">No uploaded document found for this visit.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                  </div>
-                );
-              })()}
+              {/* TAB 3 — ABHA Historical Reports */}
+              {reportViewTab === "abha_reports" && (
+                <div className="space-y-3">
+                  {token?.mockAbhaProfile?.reportImage ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-[9px] font-black">AB</span>
+                        </div>
+                        <p className="text-xs font-black text-blue-700 dark:text-blue-400">Historical Record — ABHA National Health DB</p>
+                      </div>
+                      <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-slate-950 p-2">
+                        <div
+                          onClick={() => handleOpenFullscreen({
+                            id: "abha-hist",
+                            name: "ABHA_Historical_Record.jpg",
+                            size: "2.1 MB",
+                            date: "Historical",
+                            type: "radiology" as const,
+                            previewUrl: token.mockAbhaProfile!.reportImage,
+                            clinicalImpression: "Retrieved from ABHA National Health Records"
+                          })}
+                          className="relative w-full h-80 sm:h-96 md:h-[480px] rounded-xl overflow-hidden flex items-center justify-center cursor-zoom-in group"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={token.mockAbhaProfile.reportImage}
+                            alt="ABHA Historical Report"
+                            className="w-full h-full object-contain group-hover:scale-[1.01] transition-transform duration-200"
+                          />
+                          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-black/60 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                            Click to zoom
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 px-1">Fetched via ABHA ID: {token?.input?.abhaId || "N/A"}</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-6 text-center space-y-2">
+                      <p className="text-sm font-bold text-slate-500">No ABHA Records Found</p>
+                      <p className="text-xs text-slate-400">No historical records are linked to this ABHA ID.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
             </div>
 

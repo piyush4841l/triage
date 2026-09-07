@@ -15,7 +15,8 @@ export async function POST(req: Request) {
         diagnoses: ["Hypertension", "Type 2 Diabetes"],
         medications: ["Telmisartan 40mg (1-0-0)", "Metformin 500mg (1-0-1)"],
         allergies: ["Penicillin (Rash)"],
-        rawText: "Mocked OCR Result: Patient has a history of Hypertension and Type 2 Diabetes. Current medications include Telmisartan and Metformin. Known allergy to Penicillin. Please add a real Gemini API Key to .env.local to scan real images!"
+        rawText: "Mocked OCR Result: Patient has a history of Hypertension and Type 2 Diabetes. Current medications include Telmisartan and Metformin. Known allergy to Penicillin. Please add a real Gemini API Key to .env.local to scan real images!",
+        aiSummary: "This is a demo summary. The document appears to be a prescription for a patient with Hypertension and Type 2 Diabetes. The patient is on Telmisartan 40mg once daily and Metformin 500mg twice daily. A known allergy to Penicillin is documented. (Add GEMINI_API_KEY to .env.local for real AI analysis)"
       });
     }
 
@@ -28,11 +29,12 @@ export async function POST(req: Request) {
       "diagnoses": ["list", "of", "diagnoses"],
       "medications": ["list", "of", "medications with dosages if present"],
       "allergies": ["list", "of", "allergies, or empty array"],
-      "rawText": "A 1-2 sentence professional summary of the document's contents"
+      "rawText": "A 1-2 sentence professional summary of the document's contents",
+      "aiSummary": "A 3-5 sentence plain-English clinical narrative suitable for a doctor to quickly read. Summarize the key findings, diagnoses, medications, test results, and any critical values. Write it as if briefing a doctor who has never seen this patient before."
     }
     Make sure it is valid JSON with no markdown formatting.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
     const response = await fetch(url, {
       method: "POST",

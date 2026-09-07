@@ -136,10 +136,20 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
       return;
     }
     if (authMethod === "pass" && !passInput.trim()) {
-      setVerifyError(lang === "hi" ? "कृपया अपना पासवर्ड दर्ज करें" : "Please enter your password");
-      return;
-    }
-    setIsVerifying(true);
+        setVerifyError(lang === "hi" ? "कृपया अपना पासवर्ड दर्ज करें" : "Please enter your password");
+        return;
+      }
+
+      if (idType === "abha" && authMethod === "pass") {
+        const strippedAbha = abhaId.replace(/\D/g, "");
+        const profile = MOCK_ABHA_DATABASE[strippedAbha];
+        if (profile && passInput !== profile.password) {
+          setVerifyError(lang === "hi" ? "गलत पासवर्ड" : "Incorrect password");
+          return;
+        }
+      }
+
+      setIsVerifying(true);
     setVerifyError("");
     setTimeout(() => {
       setIsVerifying(false);
@@ -156,10 +166,10 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
         const strippedAbha = abhaId.replace(/\D/g, "");
         const profile = MOCK_ABHA_DATABASE[strippedAbha];
         if (profile) {
-          if (!patientName) setPatientName(profile.name);
-          if (!age) setAge(profile.age.toString());
-          if (!gender) setGender(profile.gender);
-          if (!phone) setPhone(profile.phone);
+          setPatientName(profile.name);
+            setAge(profile.age.toString());
+            setGender(profile.gender);
+            setPhone(profile.phone);
         }
       }
 

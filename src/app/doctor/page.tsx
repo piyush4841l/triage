@@ -20,7 +20,7 @@ export default function DoctorPage() {
 
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem("doctor_session");
+      const saved = sessionStorage.getItem("doctor_session");
       if (saved) {
         setSession(JSON.parse(saved));
       }
@@ -32,7 +32,7 @@ export default function DoctorPage() {
   const handleLogin = (s: DoctorStaffSession) => {
     setSession(s);
     try {
-      localStorage.setItem("doctor_session", JSON.stringify(s));
+      sessionStorage.setItem("doctor_session", JSON.stringify(s));
     } catch (e) {
       // ignore
     }
@@ -41,7 +41,7 @@ export default function DoctorPage() {
   const handleLogout = () => {
     setSession(null);
     try {
-      localStorage.removeItem("doctor_session");
+      sessionStorage.removeItem("doctor_session");
     } catch (e) {
       // ignore
     }

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Language, translations, TranslationDictionary } from "./i18n";
+import { initSessionQueue } from "./store";
 
 interface LanguageContextValue {
   lang: Language;
@@ -17,6 +18,11 @@ const LanguageContext = createContext<LanguageContextValue>({
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>("en");
+
+  // Initialize session-aware queue wipe on first load
+  useEffect(() => {
+    initSessionQueue();
+  }, []);
 
   // Restore saved language from localStorage/sessionStorage
   useEffect(() => {

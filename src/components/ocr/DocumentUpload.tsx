@@ -44,6 +44,7 @@ export interface OcrExtractedData {
   medications: string[];
   allergies: string[];
   rawText: string;
+  aiSummary?: string;
 }
 
 export interface UploadedFileItem {
@@ -434,7 +435,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         diagnoses: extracted.diagnoses || [],
         medications: extracted.medications || [],
         allergies: extracted.allergies || [],
-        rawText: extracted.rawText || "Document attached to token."
+        rawText: extracted.rawText || "Document attached to token.",
+        aiSummary: extracted.aiSummary || "The submitted medical document was reviewed and attached to the patient's record. No specific AI insights were generated. Please refer to the original document."
       };
 
       setTimeout(() => {
@@ -456,7 +458,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         diagnoses: ["Prescription Attached"],
         medications: ["To be reviewed by physician"],
         allergies: [],
-        rawText: "Document submitted."
+        rawText: "Document submitted.",
+        aiSummary: "The submitted medical document was reviewed and attached to the patient's record. No specific AI insights were generated. Please refer to the original document."
       };
       setExtractedData(fallbackResult);
       if (autoProceed) {

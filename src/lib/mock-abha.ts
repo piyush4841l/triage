@@ -5,7 +5,8 @@ export interface MockAbhaProfile {
   bloodGroup: string;
   gender: "Male" | "Female" | "Other";
   age: number;
-  reportImage?: string; // Path to the uploaded report image in public/images
+  password?: string;
+  reportImage?: string;
 }
 
 export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
@@ -15,7 +16,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "8546971235",
     bloodGroup: "O+",
     gender: "Male",
-    age: 19,
+    age: 18,
+    password: "1111",
     reportImage: "/images/tanmay-report.jpg"
   },
   "22222222222222": {
@@ -24,7 +26,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "7765412340",
     bloodGroup: "B+",
     gender: "Male",
-    age: 20,
+    age: 18,
+    password: "2222",
     reportImage: "/images/shashwat-report.jpg"
   },
   "33333333333333": {
@@ -33,7 +36,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "6541254785",
     bloodGroup: "A+",
     gender: "Female",
-    age: 20,
+    age: 18,
+    password: "3333",
     reportImage: "/images/mohini-report.jpg"
   },
   "44444444444444": {
@@ -42,7 +46,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "7896541239",
     bloodGroup: "B+",
     gender: "Female",
-    age: 20,
+    age: 18,
+    password: "4444",
     reportImage: "/images/tripti-report.jpg"
   },
   "55555555555555": {
@@ -51,7 +56,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "7835698740",
     bloodGroup: "A-",
     gender: "Male",
-    age: 20,
+    age: 18,
+    password: "5555",
     reportImage: "/images/piyush-report.jpg"
   },
   "66666666666666": {
@@ -60,7 +66,8 @@ export const MOCK_ABHA_DATABASE: Record<string, MockAbhaProfile> = {
     phone: "9876543210",
     bloodGroup: "AB+",
     gender: "Male",
-    age: 20,
+    age: 18,
+    password: "6666",
     reportImage: "/images/aadit-report.jpg"
   }
 };
