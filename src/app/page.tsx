@@ -6,7 +6,7 @@ import { StepIndicator } from "@/components/kiosk/StepIndicator";
 import { PatientRegistration, PatientRegistrationData } from "@/components/registration/PatientRegistration";
 import { LandingScreen } from "@/components/kiosk/LandingScreen";
 import { AnatomicalSkeletonMap } from "@/components/anatomy/AnatomicalSkeletonMap";
-import { OrganDrillDownModal, SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
+import { SymptomDrillDownData } from "@/components/anatomy/OrganDrillDownModal";
 import { DocumentUpload, OcrExtractedData, UploadedFileItem } from "@/components/ocr/DocumentUpload";
 import { TokenReceiptModal } from "@/components/token/TokenReceiptModal";
 import { WhatsAppDispatchModal } from "@/components/token/WhatsAppDispatchModal";
@@ -51,7 +51,6 @@ export default function KioskPage() {
 
   // Anatomy & Symptoms Data
   const [selectedRegions, setSelectedRegions] = useState<BodyRegionId[]>([]);
-  const [isDrillDownOpen, setIsDrillDownOpen] = useState<boolean>(false);
   const [symptomData, setSymptomData] = useState<SymptomDrillDownData>({
     selectedOrgans: [],
     selectedSymptoms: [],
@@ -107,22 +106,17 @@ export default function KioskPage() {
   // Speak step guide when step changes and voice guide is on
   useEffect(() => {
     if (!voiceGuide) return;
-    const activeVoice = (lang !== "en" && lang !== "hi") ? voiceLang : lang;
-    const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
+    const prompts = VOICE_PROMPTS[lang] || VOICE_PROMPTS.en;
     if (currentStep === 0) {
-      speakText(prompts.step0, activeVoice);
+      speakText(prompts.step0, lang);
     } else if (currentStep === 1) {
-      speakText(prompts.step1, activeVoice);
-    } else if (currentStep === 2) {
-      if (!isDrillDownOpen) {
-        speakText(prompts.step2, activeVoice);
-      }
+      speakText(prompts.step1, lang);
     } else if (currentStep === 3) {
-      speakText(prompts.step3, activeVoice);
+      speakText(prompts.step3, lang);
     } else if (currentStep === 4) {
-      speakText(prompts.step4, activeVoice);
+      speakText(prompts.step4, lang);
     }
-  }, [currentStep, lang, voiceGuide, voiceLang, isDrillDownOpen]);
+  }, [currentStep, voiceGuide, lang]);
 
   // Auto-Reset Inactivity Timer
   const [showIdleWarning, setShowIdleWarning] = useState(false);
@@ -215,14 +209,8 @@ export default function KioskPage() {
     });
   };
 
-  const handleProceedToDrillDown = () => {
-    if (selectedRegions.length === 0) return;
-    setIsDrillDownOpen(true);
-  };
-
   const handleSaveSymptomDrillDown = (data: SymptomDrillDownData) => {
     setSymptomData(data);
-    setIsDrillDownOpen(false);
     setCurrentStep(3); // move to OCR upload
   };
 
@@ -359,7 +347,6 @@ export default function KioskPage() {
     });
     setOcrData(null);
     setGeneratedToken(null);
-    setIsDrillDownOpen(false);
     setIsEmergencyOpen(false);
     setIsWhatsAppOpen(false);
     sessionStorage.removeItem("kiosk_session_state");
@@ -516,17 +503,6 @@ export default function KioskPage() {
 
         </main>
       )}
-
-      {/* Organ Drill-Down Modal */}
-      <OrganDrillDownModal
-        isOpen={isDrillDownOpen}
-        onClose={() => setIsDrillDownOpen(false)}
-        selectedRegions={selectedRegions}
-        initialData={symptomData}
-        onSave={handleSaveSymptomDrillDown}
-        lang={lang}
-        voiceGuide={voiceGuide}
-      />
 
       {/* Emergency Fast-Track Protocol Modal */}
       <EmergencyFastTrackModal

@@ -37,6 +37,7 @@ interface AnatomicalSkeletonMapProps {
   onBack?: () => void;
   lang: Language;
   voiceGuide: boolean;
+  patientGender?: string;
 }
 
 export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
@@ -49,6 +50,7 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
   onBack,
   lang,
   voiceGuide,
+  patientGender,
 }) => {
   const t = translations[lang] || translations.en;
   const [view, setView] = useState<"front" | "back">("front");
@@ -78,11 +80,13 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
     const region = BODY_REGIONS[regId];
     if (region) {
       region.organs.forEach((o) => {
+        if (o.genderSpecific && o.genderSpecific !== patientGender) return;
         if (!availableOrgans.some((existing) => existing.id === o.id)) {
           availableOrgans.push(o);
         }
       });
       region.commonSymptoms.forEach((s) => {
+        if (s.genderSpecific && s.genderSpecific !== patientGender) return;
         if (!availableSymptoms.some((existing) => existing.id === s.id)) {
           availableSymptoms.push(s);
         }
@@ -124,12 +128,15 @@ export const AnatomicalSkeletonMap: React.FC<AnatomicalSkeletonMapProps> = ({
 
   useEffect(() => {
     if (!voiceGuide) return;
-    const activeVoice = (lang !== "en" && lang !== "hi") ? "en" : lang;
-    const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
-    
-    // When the UI transitions to the symptoms checklist, speak the modal instructions.
-    if (subStep === "symptoms") {
-      speakText(prompts.modal, activeVoice);
+    const prompts = VOICE_PROMPTS[lang] || VOICE_PROMPTS.en;
+    if (subStep === "map") {
+      speakText(prompts.step2, lang);
+    } else if (subStep === "organs") {
+      speakText(prompts.step2_organs, lang);
+    } else if (subStep === "symptoms") {
+      speakText(prompts.step2_symptoms, lang);
+    } else if (subStep === "discomfort") {
+      speakText(prompts.step2_discomfort, lang);
     }
   }, [subStep, voiceGuide, lang]);
 

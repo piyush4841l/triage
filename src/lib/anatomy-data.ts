@@ -15,6 +15,7 @@ export interface SubOrgan {
   icon: string;
   descriptionEn: string;
   descriptionHi: string;
+  genderSpecific?: "Female" | "Male";
 }
 
 export interface SymptomItem {
@@ -23,6 +24,7 @@ export interface SymptomItem {
   nameHi: string;
   isEmergencyIndicator?: boolean;
   departmentAffinity: string; // e.g. "Cardiology", "Pulmonology", "Gastroenterology"
+  genderSpecific?: "Female" | "Male";
 }
 
 export interface BodyRegionData {
@@ -60,6 +62,15 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
         descriptionHi: "सांस फूलना, खांसी, सीटी जैसी आवाज",
       },
       {
+        id: "breast_female",
+        nameEn: "Breasts",
+        nameHi: "स्तन",
+        icon: "🌸",
+        descriptionEn: "Breast lumps, pain, mastitis, nipple discharge",
+        descriptionHi: "स्तन में गांठ, दर्द, निप्पल डिस्चार्ज",
+        genderSpecific: "Female",
+      },
+      {
         id: "ribcage",
         nameEn: "Ribcage & Chest Muscles",
         nameHi: "पसलियां एवं मांसपेशियां",
@@ -75,6 +86,7 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       { id: "dry_wet_cough", nameEn: "Persistent Dry / Wet Cough", nameHi: "लगातार सूखी या बलगम वाली खांसी", departmentAffinity: "Pulmonology" },
       { id: "burning_chest", nameEn: "Burning Sensation / Acidity in Chest", nameHi: "सीने में जलन व खट्टी डकार", departmentAffinity: "Gastroenterology" },
       { id: "chest_muscle_strain", nameEn: "Rib / Muscle Tenderness", nameHi: "पसलियों या मांसपेशियों में दर्द", departmentAffinity: "General Medicine" },
+      { id: "breast_lump_pain", nameEn: "Breast Lump, Pain, or Nipple Discharge", nameHi: "स्तन में गांठ, दर्द या डिस्चार्ज", departmentAffinity: "Gynecology", genderSpecific: "Female" },
     ],
   },
   abdomen: {
@@ -237,6 +249,15 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
         descriptionHi: "पेशाब में जलन, बार-बार पेशाब आना, खून आना",
       },
       {
+        id: "female_reproductive",
+        nameEn: "Uterus, Ovaries & Vagina",
+        nameHi: "गर्भाशय, अंडाशय एवं योनि",
+        icon: "🌸",
+        descriptionEn: "Menstrual issues, pelvic pain, discharge, pregnancy",
+        descriptionHi: "मासिक धर्म की समस्या, पेडू में दर्द, सफेद पानी, गर्भावस्था",
+        genderSpecific: "Female",
+      },
+      {
         id: "hip_joints",
         nameEn: "Hip Joints & Pelvic Bone",
         nameHi: "कूल्हे के जोड़",
@@ -250,6 +271,10 @@ export const BODY_REGIONS: Record<BodyRegionId, BodyRegionData> = {
       { id: "blood_in_urine", nameEn: "Discolored / Blood in Urine", nameHi: "पेशाब में खून या गहरा रंग आना", isEmergencyIndicator: true, departmentAffinity: "Urology" },
       { id: "hip_pelvic_pain", nameEn: "Pelvic / Hip Pain while Standing or Walking", nameHi: "खड़े होने या चलने पर कूल्हे में दर्द", departmentAffinity: "Orthopedics" },
       { id: "frequent_night_urination", nameEn: "Excessive Urination Urge", nameHi: "बार-बार पेशाब जाने की तीव्र इच्छा", departmentAffinity: "General Medicine" },
+      { id: "menstrual_disorders", nameEn: "Heavy / Irregular Menstrual Bleeding or Severe Cramps", nameHi: "मासिक धर्म में भारी/अनियमित रक्तस्राव या गंभीर ऐंठन", departmentAffinity: "Gynecology", genderSpecific: "Female" },
+      { id: "vaginal_discharge", nameEn: "Abnormal Vaginal Discharge or Itching", nameHi: "योनि से असामान्य स्राव (सफेद पानी) या खुजली", departmentAffinity: "Gynecology", genderSpecific: "Female" },
+      { id: "pregnancy_issues", nameEn: "Pregnancy Related Pain / Bleeding / Checkup", nameHi: "गर्भावस्था से संबंधित दर्द / रक्तस्राव / जांच", departmentAffinity: "Obstetrics", genderSpecific: "Female" },
+      { id: "lower_pelvic_pain_female", nameEn: "Severe Lower Pelvic Pain / Endometriosis", nameHi: "पेडू (निचले पेट) में तेज दर्द / एंडोमेट्रियोसिस", departmentAffinity: "Gynecology", genderSpecific: "Female" },
     ],
   },
   legs_joints: {

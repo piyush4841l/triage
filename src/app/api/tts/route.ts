@@ -25,12 +25,16 @@ export async function POST(req: Request) {
 
     const targetLang = langMap[lang] || "en-IN";
 
+    if (!process.env.SARVAM_API_KEY) {
+      throw new Error("No Sarvam API key configured, falling back to native TTS");
+    }
+
     // Call Sarvam AI
     const response = await fetch("https://api.sarvam.ai/text-to-speech", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-subscription-key": process.env.SARVAM_API_KEY || "",
+        "api-subscription-key": process.env.SARVAM_API_KEY,
       },
       body: JSON.stringify({
         inputs: [text],

@@ -31,6 +31,7 @@ interface OrganDrillDownModalProps {
   onSave: (data: SymptomDrillDownData) => void;
   lang: Language;
   voiceGuide: boolean;
+  patientGender?: string;
 }
 
 export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
@@ -41,6 +42,7 @@ export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
   onSave,
   lang,
   voiceGuide,
+  patientGender,
 }) => {
   const t = translations[lang];
 
@@ -56,14 +58,13 @@ export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
   useEffect(() => {
     if (isOpen && voiceGuide && !hasSpokenRef.current) {
       hasSpokenRef.current = true;
-      const activeVoice = (lang !== "en" && lang !== "hi") ? "en" : lang;
-        const prompts = VOICE_PROMPTS[activeVoice] || VOICE_PROMPTS.en;
-        speakText(prompts.modal, activeVoice);
+      const prompts = VOICE_PROMPTS[lang] || VOICE_PROMPTS.en;
+      speakText(prompts.modal, lang);
     }
     if (!isOpen) {
       hasSpokenRef.current = false;
     }
-  }, [isOpen, voiceGuide]);
+  }, [isOpen, voiceGuide, lang]);
 
   if (!isOpen) return null;
 
@@ -116,11 +117,13 @@ export const OrganDrillDownModal: React.FC<OrganDrillDownModalProps> = ({
     const region = BODY_REGIONS[regId];
     if (region) {
       region.organs.forEach((o) => {
+        if (o.genderSpecific && o.genderSpecific !== patientGender) return;
         if (!availableOrgans.some((existing) => existing.id === o.id)) {
           availableOrgans.push(o);
         }
       });
       region.commonSymptoms.forEach((s) => {
+        if (s.genderSpecific && s.genderSpecific !== patientGender) return;
         if (!availableSymptoms.some((existing) => existing.id === s.id)) {
           availableSymptoms.push(s);
         }

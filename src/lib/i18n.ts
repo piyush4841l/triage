@@ -3780,29 +3780,32 @@ export interface LanguageMeta {
 }
 
 export const ALL_SCHEDULED_LANGUAGES: LanguageMeta[] = [
+  // --- Top 11 AI Voice Supported Languages ---
   { code: "en", label: "English", subLabel: "English", ttsLocale: "en-IN" },
   { code: "hi", label: "हिंदी", subLabel: "Hindi", ttsLocale: "hi-IN" },
-  { code: "as", label: "অসমীয়া", subLabel: "Assamese", ttsLocale: "as-IN" },
+  { code: "mr", label: "मराठी", subLabel: "Marathi", ttsLocale: "mr-IN" },
   { code: "bn", label: "বাংলা", subLabel: "Bengali", ttsLocale: "bn-IN" },
-  { code: "brx", label: "बड़ो", subLabel: "Bodo", ttsLocale: "brx-IN" },
-  { code: "doi", label: "डोगरी", subLabel: "Dogri", ttsLocale: "doi-IN" },
+  { code: "ta", label: "தமிழ்", subLabel: "Tamil", ttsLocale: "ta-IN" },
+  { code: "te", label: "తెలుగు", subLabel: "Telugu", ttsLocale: "te-IN" },
   { code: "gu", label: "ગુજરાતી", subLabel: "Gujarati", ttsLocale: "gu-IN" },
   { code: "kn", label: "ಕನ್ನಡ", subLabel: "Kannada", ttsLocale: "kn-IN" },
+  { code: "ml", label: "മലയാളം", subLabel: "Malayalam", ttsLocale: "ml-IN" },
+  { code: "pa", label: "ਪੰਜਾਬੀ", subLabel: "Punjabi", ttsLocale: "pa-IN" },
+  { code: "or", label: "ଓଡ଼ିଆ", subLabel: "Odia", ttsLocale: "or-IN" },
+
+  // --- Other Official Languages ---
+  { code: "as", label: "অসমীয়া", subLabel: "Assamese", ttsLocale: "as-IN" },
+  { code: "ur", label: "اردو", subLabel: "Urdu", ttsLocale: "ur-IN" },
+  { code: "brx", label: "बड़ो", subLabel: "Bodo", ttsLocale: "brx-IN" },
+  { code: "doi", label: "डोगरी", subLabel: "Dogri", ttsLocale: "doi-IN" },
   { code: "ks", label: "कॉशुर / كٲشُر", subLabel: "Kashmiri", ttsLocale: "ks-IN" },
   { code: "kok", label: "कोंकणी", subLabel: "Konkani", ttsLocale: "kok-IN" },
   { code: "mai", label: "मैथिली", subLabel: "Maithili", ttsLocale: "mai-IN" },
-  { code: "ml", label: "മലയാളം", subLabel: "Malayalam", ttsLocale: "ml-IN" },
   { code: "mni", label: "মৈতৈলোন্", subLabel: "Manipuri (Meitei)", ttsLocale: "mni-IN" },
-  { code: "mr", label: "मराठी", subLabel: "Marathi", ttsLocale: "mr-IN" },
   { code: "ne", label: "नेपाली", subLabel: "Nepali", ttsLocale: "ne-NP" },
-  { code: "or", label: "ଓଡ଼ିଆ", subLabel: "Odia", ttsLocale: "or-IN" },
-  { code: "pa", label: "ਪੰਜਾਬੀ", subLabel: "Punjabi", ttsLocale: "pa-IN" },
   { code: "sa", label: "संस्कृतम्", subLabel: "Sanskrit", ttsLocale: "sa-IN" },
   { code: "sat", label: "ᱥᱟᱱᱛᱟᱲᱤ", subLabel: "Santali", ttsLocale: "sat-IN" },
   { code: "sd", label: "سنڌي / सिन्धी", subLabel: "Sindhi", ttsLocale: "sd-IN" },
-  { code: "ta", label: "தமிழ்", subLabel: "Tamil", ttsLocale: "ta-IN" },
-  { code: "te", label: "తెలుగు", subLabel: "Telugu", ttsLocale: "te-IN" },
-  { code: "ur", label: "اردو", subLabel: "Urdu", ttsLocale: "ur-IN" },
 ];
 
 export * from "./anatomy-translations";

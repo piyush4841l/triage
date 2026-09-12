@@ -31,7 +31,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { Language, translations, formatUploadedRecords, formatPageTab } from "@/lib/i18n";
 import { db } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, collection, query, onSnapshot } from "firebase/firestore";
 import { speakText } from "@/lib/speech";
 import { VOICE_PROMPTS } from "@/lib/speech-prompts";
 
@@ -106,34 +106,37 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }).catch(e => console.error(e));
   }, []);
 
-  // Real-time listener for mobile QR uploads via Firebase
+      // Real-time listener for mobile QR uploads via Firebase
   useEffect(() => {
     if (!sessionId) return;
     try {
       const unsub = onSnapshot(doc(db, "uploads", sessionId), (snapshot) => {
         const data = snapshot.data();
-        if (data && data.status === "completed") {
-          const newDoc: UploadedFileItem = {
-            id: "mobile-" + Date.now(),
-            name: "Mobile_Scanned_Prescription.jpg",
-            size: "1.4 MB",
-            type: "image",
-            preset: "cardio",
-          };
-          setFiles((prev) => [...prev, newDoc]);
-          setActivePreviewIndex(0);
-          if (data.ocrDetails) {
-            setExtractedData({
-              fileName: "Mobile_Scanned_Prescription.jpg",
-              fileSize: "1.4 MB",
-              confidence: "99.2%",
-              totalDocuments: 1,
-              diagnoses: data.ocrDetails.diagnoses || [],
-              medications: data.ocrDetails.medications || [],
-              allergies: data.ocrDetails.allergies || [],
-              rawText: data.ocrDetails.rawText || "Prescription uploaded from mobile device."
+        if (data && data.images && Array.isArray(data.images)) {
+          setFiles((prev) => {
+            const newFiles = [...prev];
+            let added = false;
+            
+            data.images.forEach((img: any) => {
+              if (!newFiles.some(f => f.id === img.id)) {
+                newFiles.push({
+                  id: img.id,
+                  name: img.name || "Mobile_Scanned_Document.jpg",
+                  size: "1.4 MB",
+                  type: "image",
+                  previewUrl: img.base64,
+                  preset: "custom",
+                });
+                added = true;
+              }
             });
-          }
+            
+            if (added) {
+              setActivePreviewIndex(newFiles.length - 1);
+              return newFiles;
+            }
+            return prev;
+          });
         }
       });
       return () => unsub();
@@ -401,18 +404,19 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       // Call OCR API
       let extracted: any = null;
       if (compressedData) {
-        try {
-          const res = await fetch("/api/ocr", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageBase64: compressedData })
-          });
-          if (res.ok) {
-            extracted = await res.json().catch(() => null);
-          }
-        } catch {
-          // fallback below
-        }
+        // Skipped AI summarization of uploaded docs for presentation prototype
+        // try {
+        //   const res = await fetch("/api/ocr", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ imageBase64: compressedData })
+        //   });
+        //   if (res.ok) {
+        //     extracted = await res.json().catch(() => null);
+        //   }
+        // } catch {
+        //   // fallback below
+        // }
       }
 
       if (!extracted || (!extracted.diagnoses && !extracted.medications)) {
@@ -803,7 +807,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             {/* QR Code Canvas */}
             <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/30 inline-block shadow-inner">
               <QRCodeSVG
-                value={`https://triage-hospital.abdm.gov.in/upload?session=${sessionId}`}
+                value={typeof window !== "undefined" ? `${window.location.protocol}//${localIp || window.location.hostname}:3000/mobile-upload?session=${sessionId}` : ""}
                 size={180}
                 level="M"
                 includeMargin={false}
